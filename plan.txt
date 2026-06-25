@@ -1,0 +1,1458 @@
+# 项目交接与状态重建文档（ISP × AE World Model）
+
+---
+
+# 1. 项目定义与核心问题 (Problem Definition)
+
+## 核心研究目标
+
+探索下一代 ISP 中 AE（Auto Exposure）从传统控制器（Reactive Controller）向智能决策器（Predictive Planner）的范式迁移。
+
+具体而言：
+
+```text
+Current Frame
+↓
+World Model
+↓
+Future Imaging State
+↓
+Exposure Planning
+↓
+Capture More Useful Information
+```
+
+而不是传统：
+
+```text
+Current Frame
+↓
+AE
+↓
+Exposure
+```
+
+---
+
+最终目标不是：
+
+```text
+Learning Exposure Value
+```
+
+而是：
+
+```text
+Learning Camera Decision
+```
+
+进一步抽象为：
+
+```text
+Scene
+↓
+Imaging Understanding
+↓
+Future Imaging State
+↓
+Camera State Planning
+↓
+Photo
+```
+
+---
+
+# 2. 已确立的核心共识与假设 (Established Assumptions & Consensus)
+
+## 共识1：AE本质不是回归问题
+
+传统看法：
+
+```text
+Frame
+↓
+Exposure
+```
+
+实际上错误。
+
+AE本质是：
+
+```text
+Current Observation
+↓
+Decision
+↓
+Future Image Quality Maximization
+```
+
+属于：
+
+```text
+Decision Problem
+```
+
+而非：
+
+```text
+Reconstruction Problem
+```
+
+---
+
+## 共识2：AE缺失的不是监督，而是未来信息
+
+传统AE：
+
+```text
+Only Current Frame
+```
+
+PPISP：
+
+```text
+All Frames
+```
+
+拥有完整场景信息。
+
+因此：
+
+PPISP容易做：
+
+```text
+Photo → Camera State
+```
+
+AE困难：
+
+```text
+Scene → Optimal Camera State
+```
+
+因为未来未知。
+
+---
+
+## 共识3：PPISP本质不是Temporal Smooth
+
+表面：
+
+```text
+Photometric Consistency
+```
+
+实际上：
+
+```text
+Camera State Modeling
+```
+
+即：
+
+```text
+Photo
+↓
+Estimate Camera State
+↓
+Canonical Scene
+```
+
+Camera State包括：
+
+```text
+Exposure
+White Balance
+Gain
+Tone Curve
+Response Curve
+```
+
+---
+
+## 共识4：PPISP与PhotoFlow构成对偶关系
+
+PPISP：
+
+```text
+Photo
+↓
+Camera State Estimation
+↓
+Scene
+```
+
+PhotoFlow：
+
+```text
+Scene
+↓
+Camera State Planning
+↓
+Photo
+```
+
+对应：
+
+```text
+Estimation
+↔
+Planning
+```
+
+---
+
+## 共识5：未来ISP的重要研究对象是Camera State
+
+传统：
+
+```text
+RAW
+↓
+ISP
+↓
+RGB
+```
+
+未来：
+
+```text
+Scene
+↓
+Camera State
+↓
+ISP Rendering
+↓
+Photo
+```
+
+Camera State成为独立中间表示。
+
+---
+
+## 共识6：World Model引入AE的核心价值
+
+不是：
+
+```text
+Predict Future RGB
+```
+
+而是：
+
+```text
+Predict Future Imaging State
+```
+
+例如：
+
+```python
+{
+ highlight_risk,
+ shadow_risk,
+ motion_risk,
+ face_importance,
+ dynamic_range,
+ clipping_risk
+}
+```
+
+---
+
+## 共识7：Task-Oriented Latent World Model是当前最合理方向
+
+最终收敛方案：
+
+```text
+Frame_t
+↓
+Encoder
+↓
+Latent Scene State
+
+↓
+World Model
+
+↓
+Future Imaging State
+
+↓
+Exposure Planner
+
+↓
+Exposure
+```
+
+---
+
+## 共识8：不建议直接学习AE Policy
+
+因为：
+
+```text
+Optimal Exposure
+```
+
+不存在唯一GT。
+
+因此：
+
+```text
+Policy Learning
+```
+
+天然困难。
+
+应该转向：
+
+```text
+Future Imaging State Learning
+```
+
+---
+
+# 3. 已否决的路径与原因 (Rejected Directions & Rationale)
+
+---
+
+## 路径1：直接学习Exposure GT
+
+形式：
+
+```text
+Frame
+↓
+Network
+↓
+Exposure
+```
+
+原因：
+
+不存在唯一正确答案。
+
+Reviewer必问：
+
+```text
+GT Exposure是谁定义的？
+```
+
+无法回答。
+
+---
+
+## 路径2：完全RL训练AE
+
+形式：
+
+```text
+State
+↓
+Policy
+↓
+Exposure
+↓
+Reward
+```
+
+原因：
+
+* 数据采集困难
+* Reward设计困难
+* 收敛困难
+* 工程成本过高
+
+RL只能作为后期Fine-tuning。
+
+不能作为主线。
+
+---
+
+## 路径3：Video Generation World Model
+
+形式：
+
+```text
+Frame_t
+↓
+Video Predictor
+↓
+Frame_t+K
+```
+
+原因：
+
+AE不需要未来像素。
+
+需要：
+
+```text
+Future Information Distribution
+```
+
+视频生成过重。
+
+---
+
+## 路径4：NeRF/3DGS Scene Reconstruction
+
+原因：
+
+虽然与PPISP思想接近。
+
+但：
+
+```text
+Mobile ISP
+```
+
+无法实时运行。
+
+不适合作为AE核心方案。
+
+---
+
+## 路径5：仅做HDR+Tone
+
+曾考虑：
+
+```text
+HDR
+↓
+Tone
+```
+
+替代AE。
+
+最终认为：
+
+创新性不足。
+
+容易退化成：
+
+```text
+Image Restoration
+```
+
+而非：
+
+```text
+Camera Decision
+```
+
+---
+
+# 4. 关键的头脑风暴脉络与心路历程 (Brainstorming Trajectory)
+
+---
+
+## 阶段1
+
+从ISP发展趋势出发
+
+观察：
+
+```text
+Module Optimization
+→
+System Optimization
+```
+
+开始思考：
+
+```text
+AE
+AWB
+HDR
+Tone
+```
+
+联合优化。
+
+---
+
+## 阶段2
+
+研究PPISP
+
+发现：
+
+PPISP不是简单曝光补偿。
+
+而是：
+
+```text
+Camera State Modeling
+```
+
+---
+
+提出：
+
+```text
+Photo
+↓
+Camera State
+↓
+Scene
+```
+
+思想。
+
+---
+
+## 阶段3
+
+研究PhotoFlow
+
+发现：
+
+PPISP：
+
+```text
+Estimation
+```
+
+PhotoFlow：
+
+```text
+Planning
+```
+
+形成对偶结构。
+
+---
+
+## 阶段4
+
+提出Camera State概念
+
+统一：
+
+```text
+AE
+AWB
+Tone
+Gain
+```
+
+形成：
+
+```text
+Camera State Space
+```
+
+---
+
+## 阶段5
+
+尝试AE Policy Learning
+
+发现核心问题：
+
+```text
+Optimal Exposure
+```
+
+没有监督。
+
+---
+
+## 阶段6
+
+发现PPISP之所以成功：
+
+因为拥有：
+
+```text
+Global Scene Information
+```
+
+即：
+
+```text
+Past + Present + Future
+```
+
+---
+
+提出关键问题：
+
+```text
+AE能否拥有类似信息？
+```
+
+---
+
+## 阶段7
+
+引入World Model
+
+形成：
+
+```text
+Current Frame
+↓
+World Model
+↓
+Future Imaging State
+↓
+Exposure Planning
+```
+
+---
+
+## 阶段8（当前）
+
+聚焦：
+
+```text
+Task-Oriented Latent World Model
+```
+
+作为AE未来方向。
+
+---
+
+# 5. 当前未解决的痛点与悬而未决的问题 (Open Issues & Bottlenecks)
+
+---
+
+## 问题1：Future Imaging State如何定义
+
+这是当前最大问题。
+
+目前只是概念：
+
+```python
+{
+ highlight_risk,
+ shadow_risk,
+ motion_risk,
+ face_importance
+}
+```
+
+尚未形成统一数学定义。
+
+---
+
+## 问题2：World Model监督如何构建
+
+需要回答：
+
+```text
+Future Imaging State GT
+```
+
+从哪里来？
+
+是：
+
+```text
+Video
+```
+
+推导？
+
+还是：
+
+```text
+HDR
+```
+
+推导？
+
+尚未确定。
+
+---
+
+## 问题3：Exposure Planner如何训练
+
+目前两种路线：
+
+A
+
+```text
+Pseudo Label
+```
+
+B
+
+```text
+RL Fine-tuning
+```
+
+尚未最终选择。
+
+---
+
+## 问题4：World Model是否真正必要
+
+需要证明：
+
+```text
+World Model
+>
+Current Frame Only
+```
+
+否则Reviewer会质疑：
+
+```text
+直接加大网络不行吗？
+```
+
+---
+
+## 问题5：Future Horizon选择
+
+预测：
+
+```text
+0.5s ?
+1s ?
+3s ?
+5s ?
+```
+
+尚未确定。
+
+---
+
+## 问题6：真实手机数据如何获得
+
+需要决定：
+
+使用：
+
+```text
+HDR Bracket
+```
+
+还是：
+
+```text
+Video RAW
+```
+
+还是：
+
+```text
+Simulation
+```
+
+---
+
+# 6. 下一步最核心的 3 个探索方向 (Next Actionable Steps)
+
+---
+
+## Step 1
+
+定义Future Imaging State
+
+目标：
+
+建立数学形式。
+
+例如：
+
+```python
+FIS = {
+ DR,
+ HighlightRisk,
+ ShadowRisk,
+ MotionRisk,
+ SubjectImportance
+}
+```
+
+明确：
+
+* 可计算
+* 可监督
+* 与AE强相关
+
+这是整个课题基础。
+
+---
+
+## Step 2
+
+系统调研最适合AE的World Model
+
+重点阅读：
+
+### 世界模型
+
+* V-JEPA
+* V-JEPA2
+* I-JEPA
+* DreamerV3
+* PlaNet
+
+关注：
+
+```text
+Latent Dynamics
+```
+
+而非：
+
+```text
+Video Generation
+```
+
+回答：
+
+```text
+哪种World Model最适合Future Imaging State预测？
+```
+
+---
+
+## Step 3
+
+设计完整CVPR Pipeline
+
+目标形成：
+
+```text
+Frame_t
+↓
+Imaging Encoder
+↓
+Latent State
+
+↓
+Task-Oriented World Model
+
+↓
+Future Imaging State
+
+↓
+Exposure Planner
+
+↓
+Exposure
+```
+
+同时明确实验体系：
+
+### E1
+
+HDR Reconstruction
+
+证明：
+
+```text
+More Recoverable Information
+```
+
+---
+
+### E2
+
+Long-Horizon Exposure Transition
+
+证明：
+
+```text
+Future Prediction
+```
+
+---
+
+### E3
+
+Temporal Stability
+
+证明：
+
+```text
+Planning > Reactive Control
+```
+
+---
+
+### E4
+
+Information Preservation
+
+证明：
+
+```text
+World Model
+→
+Better Information Acquisition
+```
+
+---
+
+# 当前最终研究命题（一句话总结）
+
+```text
+Traditional AE:
+Current Frame → Exposure
+
+Our Goal:
+Current Frame
+→ Task-Oriented Latent World Model
+→ Future Imaging State
+→ Camera State Planning
+→ Exposure
+```
+
+核心贡献不是学习曝光值，而是：
+
+```text
+Learning Future Imaging State for Camera State Planning.
+```
+
+这是目前整个项目最稳定、最一致、也是最有CVPR潜力的研究主线。
+这是一个非常重要的判断，而且我认为比继续发散到 Agent、PhotoFlow、Dreamer 更务实。
+
+如果目标是：
+
+```text
+CVPR-level Novelty
++
+最小实验成本
++
+最快验证核心思想
+```
+
+那么直接借鉴 PPISP 框架，做一个 AE-Oriented PPISP，可能是目前性价比最高的路线。
+
+---
+
+# 首先重新看PPISP本质
+
+很多人看PPISP会觉得：
+
+```text
+Photometric Consistency
+```
+
+实际上我们前面已经分析过：
+
+PPISP真正做的是：
+
+```text
+Photometric State Modeling
+```
+
+即：
+
+```text
+Image
+↓
+Estimate Camera State
+↓
+Canonical Scene
+```
+
+其中Camera State包含：
+
+```text
+Exposure
+White Balance
+Gain
+Response Curve
+```
+
+---
+
+PPISP本质假设：
+
+```text
+Observed Image
+=
+Scene
++
+Camera State
+```
+
+即：
+
+```math
+I = ISP(Scene, State)
+```
+
+---
+
+训练目标：
+
+```text
+Recover State
+```
+
+而不是：
+
+```text
+Recover Image
+```
+
+---
+
+# 你的问题
+
+如果把这个思想搬到AE。
+
+会变成：
+
+```text
+Current Frame
+↓
+Estimate Future State
+↓
+Exposure Decision
+```
+
+---
+
+这里和PPISP只差一步：
+
+PPISP：
+
+```text
+Known Image
+↓
+Estimate State
+```
+
+---
+
+AE：
+
+```text
+Current Image
+↓
+Predict Future State
+```
+
+---
+
+实际上：
+
+State Space可以直接继承。
+
+---
+
+# 最小成本版本
+
+甚至不需要Dreamer。
+
+不需要JEPA。
+
+不需要RL。
+
+---
+
+直接：
+
+```text
+Frame_t
+↓
+Encoder
+↓
+Latent State z_t
+↓
+Temporal Predictor
+↓
+z_(t+k)
+↓
+Exposure Head
+```
+
+结束。
+
+---
+
+# 甚至World Model都可以极简
+
+例如：
+
+PPISP:
+
+```text
+Image_i
+↓
+State_i
+```
+
+---
+
+你：
+
+```text
+Image_t
+↓
+State_t
+
+Image_(t+k)
+↓
+State_(t+k)
+```
+
+---
+
+学习：
+
+```math
+State_t
+→
+State_(t+k)
+```
+
+即可。
+
+---
+
+# 为什么这很重要
+
+因为Reviewer会接受。
+
+---
+
+如果你说：
+
+```text
+Dreamer
+World Model
+Agent
+Planning
+```
+
+Reviewer马上问：
+
+```text
+为什么AE需要这么复杂？
+```
+
+---
+
+但如果说：
+
+```text
+PPISP证明了
+Camera State是有意义的中间表示
+
+我们进一步预测
+Future Camera State
+用于曝光决策
+```
+
+逻辑自然很多。
+
+---
+
+# 一个更具体的版本
+
+## Step1
+
+借鉴PPISP
+
+构造：
+
+```text
+State
+=
+{
+Exposure,
+WB,
+Gain
+}
+```
+
+---
+
+训练：
+
+```text
+Frame
+↓
+State Encoder
+↓
+State Vector
+```
+
+---
+
+得到：
+
+```math
+s_t
+```
+
+---
+
+# Step2
+
+Temporal State Predictor
+
+输入：
+
+```math
+s_t
+```
+
+预测：
+
+```math
+s_(t+1)
+```
+
+或者：
+
+```math
+s_(t+5)
+```
+
+---
+
+损失：
+
+```math
+L_state
+=
+||s_pred-s_gt||
+```
+
+---
+
+# Step3
+
+AE Planner
+
+输入：
+
+```math
+s_t
++
+s_future
+```
+
+输出：
+
+```math
+EV
+```
+
+---
+
+# 数据怎么做
+
+这里其实是最大的好消息。
+
+---
+
+因为PPISP需要：
+
+```text
+Multi-view
+```
+
+---
+
+你不需要。
+
+---
+
+只需要：
+
+```text
+Video
+```
+
+即可。
+
+---
+
+例如：
+
+```text
+Frame_t
+
+Frame_t+1
+
+Frame_t+2
+...
+```
+
+---
+
+利用现成AE算法生成：
+
+```text
+EV_t
+```
+
+---
+
+形成：
+
+```text
+State_t
+```
+
+---
+
+于是：
+
+```text
+Frame_t
+→
+Future State
+```
+
+天然监督。
+
+---
+
+# 更进一步
+
+其实我觉得最有潜力的最小创新不是：
+
+```text
+Predict Future Exposure
+```
+
+而是：
+
+```text
+Predict Future Information Risk
+```
+
+借鉴PPISP的状态建模。
+
+---
+
+定义：
+
+```python
+State =
+{
+EV,
+HighlightRatio,
+ShadowRatio,
+FaceScore,
+MotionScore
+}
+```
+
+---
+
+PPISP：
+
+```text
+Photometric State
+```
+
+---
+
+你：
+
+```text
+Imaging State
+```
+
+---
+
+然后：
+
+```text
+Current State
+↓
+Future State
+↓
+Exposure
+```
+
+---
+
+# 我作为Reviewer最容易接受的版本
+
+题目甚至可能变成：
+
+```text
+Predictive Camera State Modeling
+for Exposure Control
+```
+
+或者：
+
+```text
+Future Imaging State Prediction
+for Auto Exposure
+```
+
+---
+
+而不是：
+
+```text
+World Model AE
+```
+
+因为后者太大。
+
+---
+
+# 从发表概率看
+
+我会把路线排序：
+
+### 第一档（最推荐）
+
+PPISP → Future Imaging State → AE
+
+```text
+成本低
+逻辑闭环
+容易实验
+```
+
+---
+
+### 第二档
+
+PPISP + JEPA
+
+```text
+有创新
+但实现复杂
+```
+
+---
+
+### 第三档
+
+Dreamer / World Model / RL
+
+```text
+最炫
+最难做
+最容易失败
+```
+
+---
+
+所以如果目标是“最小成本验证核心思想”，当前最合理的收敛方向已经不是：
+
+```text
+AE World Model
+```
+
+而是进一步具体化为：
+
+```text
+PPISP-style State Modeling
+↓
+Future Imaging State Prediction
+↓
+Exposure Planning
+```
+
+这样你实际上是在 **PPISP 的 Camera State Modeling 框架上增加 Temporal Prediction 和 Decision 两个模块**，既继承了已有理论基础，又能把研究问题从“状态估计”推进到“状态预测与规划”，这是一个非常自然且容易落地的增量创新路径。
