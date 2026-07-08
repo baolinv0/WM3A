@@ -9,6 +9,7 @@ import random
 import platform
 import sys
 import time
+import zlib
 
 import numpy as np
 import pandas as pd
@@ -52,6 +53,31 @@ def best_fixed_sets(train_ds, backend, metric: str, budgets: list[int], base_req
         subset = max(scores[b], key=lambda k: float(np.mean(scores[b][k])))
         best[b] = list(subset)
     return best
+
+
+def resolve_fixed_subset(
+    requested: list[float],
+    available: list[float],
+    base: float,
+    budget: int,
+) -> list[float]:
+    """Resolve a train-selected fixed set on a possibly different test EV pool.
+
+    Exact matches are kept first. Missing slots are filled with unused exposures
+    nearest to the base exposure so the baseline is never silently evaluated
+    with fewer frames than the requested exact budget.
+    """
+    subset = [float(e) for e in requested if float(e) in available]
+    if base not in subset:
+        subset = [float(base)] + subset
+
+    # Remove duplicates while preserving order.
+    subset = list(dict.fromkeys(subset))[:budget]
+    if len(subset) < budget:
+        remaining = [float(e) for e in available if float(e) not in subset]
+        remaining = sorted(remaining, key=lambda e: (abs(e - base), e))
+        subset.extend(remaining[: budget - len(subset)])
+    return subset[:budget]
 
 
 def main():
@@ -122,33 +148,37 @@ def main():
             budget = min(budget, len(sample.evs))
             # Best fixed chosen on train split or configured explicitly.
             if budget in fixed_sets:
-                subset = [e for e in fixed_sets[budget] if e in sample.exposures]
-                if base not in subset:
-                    subset = [base] + subset
-                subset = subset[:budget]
+                subset = resolve_fixed_subset(fixed_sets[budget], sample.evs, base, budget)
             else:
                 # Conservative symmetric fallback around base.
                 ordered = sorted(sample.evs, key=lambda e: (abs(e - base), e))
                 subset = sorted(ordered[:budget])
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "best_fixed", "score": evaluator.evaluate(subset), "selected": json.dumps(subset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "best_fixed", "repeat": None, "score": evaluator.evaluate(subset), "selected": json.dumps(subset)})
 
             hset = rollout_heuristic(sample.exposures, budget, base, heuristic)
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "strong_heuristic", "score": evaluator.evaluate(hset), "selected": json.dumps(hset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "strong_heuristic", "repeat": None, "score": evaluator.evaluate(hset), "selected": json.dumps(hset)})
 
             gset, gscore = evaluator.oracle_greedy(budget, base)
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_greedy", "score": gscore, "selected": json.dumps(gset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_greedy", "repeat": None, "score": gscore, "selected": json.dumps(gset)})
 
             sset, sscore = evaluator.oracle_sequence(budget, base)
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_sequence", "score": sscore, "selected": json.dumps(sset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_sequence", "repeat": None, "score": sscore, "selected": json.dumps(sset)})
             gaps.append({"scene_id": sample.scene_id, "budget": budget, "greedy_score": gscore, "sequence_score": sscore, "gap": sscore - gscore})
             if len(gset) > 1:
                 action_rows.append({"scene_id": sample.scene_id, "budget": budget, "first_oracle_action": gset[1]})
 
-            random_scores = []
+            scene_seed = zlib.crc32(sample.scene_id.encode("utf-8")) & 0xFFFFFFFF
             for r in range(random_repeats):
-                rset = rollout_random(sample.exposures, budget, base, random.Random(seed + 7919 * r + hash(sample.scene_id) % 100003))
-                random_scores.append(evaluator.evaluate(rset))
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "random", "score": float(np.mean(random_scores)), "selected": "mean_over_repeats"})
+                rng = random.Random(seed + 7919 * r + scene_seed)
+                rset = rollout_random(sample.exposures, budget, base, rng)
+                rows.append({
+                    "scene_id": sample.scene_id,
+                    "budget": budget,
+                    "method": "random",
+                    "repeat": r,
+                    "score": float(evaluator.evaluate(rset)),
+                    "selected": json.dumps(rset),
+                })
 
     df = pd.DataFrame(rows)
     df.to_csv(out / "per_scene.csv", index=False)
