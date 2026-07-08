@@ -1,0 +1,49 @@
+seed: 42
+
+dataset:
+  train_manifest: data/toy/train.jsonl
+  test_manifest: data/toy/test.jsonl
+  limit_train: null
+  limit_test: null
+  fixed_search_scenes: 8
+
+simulator:
+  enabled: true
+  params:
+    mu: 5000.0
+    frame_dt: 0.0333333
+    base_shutter: 0.0083333
+    base_iso: 200.0
+    full_well_e: 12000.0
+    read_noise_e: 3.0
+    adc_noise_dn: 0.00024414
+    gamma: 2.2
+    reference_percentile: 90.0
+    reference_level: 0.7
+    motion_mode: linear_tmo
+    temporal_samples: 4
+    seed: 123
+
+fusion:
+  type: linear_radiance
+  params:
+    gamma: 2.2
+    mu: 5000.0
+    sigma: 0.2
+
+heuristic:
+  gamma: 2.2
+  reliable_low: 0.04
+  reliable_high: 0.96
+  redundancy_penalty: 0.05
+
+experiment:
+  candidate_evs: [-3, -2, -1, 0, 1, 2, 3]
+  base_ev: 0
+  budgets: [1, 2, 3]
+  metric: psnr
+  random_repeats: 3
+  enumerate_value_tensor: true
+  value_tensor_max_subset_size: 1
+  bootstrap_repeats: 200
+  fixed_sets: {}

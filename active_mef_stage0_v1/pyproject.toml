@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "active-mef-stage0"
+version = "0.1.0"
+description = "Stage-0 feasibility code for adaptive multi-exposure acquisition"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "PyYAML>=6.0",
+  "imageio>=2.31",
+  "opencv-python-headless>=4.8",
+  "scikit-image>=0.22",
+  "tqdm>=4.66",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
