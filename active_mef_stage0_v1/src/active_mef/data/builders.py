@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 import math
 import re
+import warnings
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp"}
 HDR_EXTS = {".hdr", ".exr", ".npy", ".npz", ".tif", ".tiff"}
@@ -45,6 +46,11 @@ def _ordinal_evs(n: int, step: float = 1.0) -> list[float]:
     return [(i - center) * step for i in range(n)]
 
 
+def _has_duplicate_evs(evs: list[float], decimals: int = 8) -> bool:
+    rounded = [round(float(ev), decimals) for ev in evs]
+    return len(rounded) != len(set(rounded))
+
+
 def build_sequence_pool_manifest(
     input_root: str | Path,
     gt_root: str | Path,
@@ -66,6 +72,14 @@ def build_sequence_pool_manifest(
         if evs is None:
             evs = _ordinal_evs(len(frames), step=ordinal_step)
             ev_source = "ordinal"
+
+        if _has_duplicate_evs(evs):
+            warnings.warn(
+                f"Duplicate EVs in scene {seq_dir.name}: {evs}; skipping scene to avoid dict overwrite.",
+                RuntimeWarning,
+            )
+            continue
+
         if gt_in_subdir:
             gt_candidates = _image_files(gt_root / seq_dir.name)
         else:
