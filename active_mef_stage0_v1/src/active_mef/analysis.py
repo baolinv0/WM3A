@@ -35,10 +35,8 @@ def paired_bootstrap_delta(
     if len(d) == 0:
         return {"mean": float("nan"), "lo": float("nan"), "hi": float("nan"), "n": 0}
     rng = np.random.default_rng(seed)
-    means = np.empty(n_boot, dtype=float)
-    for i in range(n_boot):
-        idx = rng.integers(0, len(d), size=len(d))
-        means[i] = d[idx].mean()
+    idx = rng.integers(0, len(d), size=(n_boot, len(d)))
+    means = d[idx].mean(axis=1)
     return {
         "mean": float(d.mean()),
         "lo": float(np.percentile(means, 2.5)),
