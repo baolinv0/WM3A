@@ -17,18 +17,33 @@ class HistogramCoverageHeuristic:
         pred_lin = lin * (2.0 ** (cand_ev - ref_ev))
         return np.power(np.clip(pred_lin, 0, 1), 1.0 / self.gamma)
 
+    def _best_ref_for_candidate(self, selected: list[float], cand_ev: float) -> float:
+        """Choose the selected exposure closest to the candidate direction.
+
+        Extrapolation beyond the current range uses the nearest boundary
+        measurement; interpolation inside the range uses the nearest EV.
+        """
+        if cand_ev < min(selected):
+            return float(min(selected))
+        if cand_ev > max(selected):
+            return float(max(selected))
+        return float(min(selected, key=lambda e: abs(e - cand_ev)))
+
     def choose(self, exposures: dict[float, np.ndarray], selected: list[float], remaining: list[float]) -> float:
         if not remaining:
             raise ValueError("No remaining actions")
-        ref_ev = min(selected, key=lambda e: abs(e))
-        ref = exposures[float(ref_ev)]
-        current_reliable = np.zeros(ref.shape[:2], dtype=bool)
+
+        ref_shape = exposures[float(selected[0])].shape[:2]
+        current_reliable = np.zeros(ref_shape, dtype=bool)
         for ev in selected:
             img = exposures[float(ev)].mean(axis=2)
             current_reliable |= (img > self.reliable_low) & (img < self.reliable_high)
+
         best_ev, best_score = None, -float("inf")
         for ev in remaining:
-            pred = self._predict_from_reference(ref, ref_ev, ev).mean(axis=2)
+            ref_ev = self._best_ref_for_candidate(selected, float(ev))
+            ref = exposures[float(ref_ev)]
+            pred = self._predict_from_reference(ref, ref_ev, float(ev)).mean(axis=2)
             cand_rel = (pred > self.reliable_low) & (pred < self.reliable_high)
             gain = np.mean((~current_reliable) & cand_rel)
             overlap = np.mean(current_reliable & cand_rel)
