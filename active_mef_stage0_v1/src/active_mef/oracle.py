@@ -44,16 +44,32 @@ class SceneEvaluator:
         return selected, self.evaluate(selected)
 
     def oracle_sequence(self, budget: int, base_ev: float) -> tuple[list[float], float]:
+        """Exact-budget exhaustive oracle with a mandatory base exposure.
+
+        This method deliberately evaluates only sets of cardinality ``budget``
+        when enough candidates exist. It is therefore suitable for the
+        greedy-vs-sequence *selection* test. Stop-aware/at-most-budget search is
+        a separate experimental condition and must not be conflated with this
+        oracle.
+        """
         if budget <= 1:
             return [float(base_ev)], self.evaluate([base_ev])
+
         remaining = [e for e in self.sample.evs if e != base_ev]
-        best_set = [float(base_ev)]
-        best_score = self.evaluate(best_set)
-        for combo in combinations(remaining, min(budget - 1, len(remaining))):
+        k = min(budget - 1, len(remaining))
+        if k == 0:
+            return [float(base_ev)], self.evaluate([base_ev])
+
+        best_set: list[float] = []
+        best_score = -float("inf")
+        for combo in combinations(remaining, k):
             selected = [float(base_ev)] + [float(e) for e in combo]
             score = self.evaluate(selected)
             if score > best_score:
                 best_set, best_score = selected, score
+
+        if not best_set:
+            return [float(base_ev)], self.evaluate([base_ev])
         return best_set, float(best_score)
 
     def enumerate_value_tensor(self, max_subset_size: int, base_ev: float) -> list[dict]:
