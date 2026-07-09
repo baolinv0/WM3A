@@ -67,6 +67,17 @@ class ManifestExposurePoolDataset:
             target = np.clip(
                 read_image(rec["gt"], max_size=self.max_image_size), 0.0, 1.0
             )
+            # Guard against EXIF-orientation inconsistency between GT and
+            # exposure frames (common in SICE where Label and sequence images
+            # were processed independently and may carry different EXIF tags).
+            # If target is the exact transpose of the exposure grid, rotate it.
+            if exposures:
+                ref_shape = next(iter(exposures.values())).shape  # (H, W, C)
+                t_h, t_w = target.shape[:2]
+                r_h, r_w = ref_shape[:2]
+                if (t_h == r_w and t_w == r_h) and (t_h != t_w):
+                    # Target is transposed relative to exposures — rotate 90°.
+                    target = np.ascontiguousarray(np.rot90(target))
             return ExposurePoolSample(scene_id, exposures, target, rec)
 
         if kind == "hdr_pair":

@@ -169,3 +169,5 @@ Proceed to scalar value prediction only if:
 - no claim that ordinal SICE/Kalantari frame ranks are physical EVs.
 
 The next code milestone is a scalar predictor only after Gate A passes.
+
+

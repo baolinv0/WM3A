@@ -1,11 +1,11 @@
 seed: 42
 
 dataset:
-  train_manifest: data/manifests/sice_train.jsonl
+  # No train_manifest: use the explicitly configured fixed_sets below as-is.
+  # Train-searching an optimal fixed bracket would make the baseline too strong
+  # and defeat the purpose of Kill Test 1 (comparing oracle vs genuinely fixed bracket).
   test_manifest:  data/manifests/sice_test.jsonl
-  limit_train: null
   limit_test:  null
-  fixed_search_scenes: 100
   # images already resized to 512px offline — no runtime resize needed
 
 simulator:

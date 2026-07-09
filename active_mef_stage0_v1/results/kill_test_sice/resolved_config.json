@@ -1,11 +1,8 @@
 {
   "seed": 42,
   "dataset": {
-    "train_manifest": "data/manifests/sice_train.jsonl",
     "test_manifest": "data/manifests/sice_test.jsonl",
-    "limit_train": null,
-    "limit_test": null,
-    "fixed_search_scenes": 100
+    "limit_test": null
   },
   "simulator": {
     "enabled": false
