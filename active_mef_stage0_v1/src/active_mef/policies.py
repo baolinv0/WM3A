@@ -17,33 +17,35 @@ class HistogramCoverageHeuristic:
         pred_lin = lin * (2.0 ** (cand_ev - ref_ev))
         return np.power(np.clip(pred_lin, 0, 1), 1.0 / self.gamma)
 
-    def _best_ref_for_candidate(self, selected: list[float], cand_ev: float) -> float:
-        """Choose the selected exposure closest to the candidate direction.
+    def _best_ref_ev(self, selected: list[float], cand_ev: float) -> float:
+        """Pick the reference frame most likely to yield a good prediction.
 
-        Extrapolation beyond the current range uses the nearest boundary
-        measurement; interpolation inside the range uses the nearest EV.
+        For a darker candidate (cand_ev < min(selected)) use the darkest
+        available frame; for a brighter candidate use the brightest.  Within
+        the existing range, pick the nearest neighbour.  This avoids predicting
+        a bright candidate from a saturated base frame, which would produce a
+        near-zero linearised signal and make every bright region look unreliable.
         """
-        if cand_ev < min(selected):
-            return float(min(selected))
-        if cand_ev > max(selected):
-            return float(max(selected))
-        return float(min(selected, key=lambda e: abs(e - cand_ev)))
+        if cand_ev <= min(selected):
+            return min(selected)
+        if cand_ev >= max(selected):
+            return max(selected)
+        return min(selected, key=lambda e: abs(e - cand_ev))
 
     def choose(self, exposures: dict[float, np.ndarray], selected: list[float], remaining: list[float]) -> float:
         if not remaining:
             raise ValueError("No remaining actions")
-
-        ref_shape = exposures[float(selected[0])].shape[:2]
-        current_reliable = np.zeros(ref_shape, dtype=bool)
+        current_reliable = np.zeros(
+            next(iter(exposures.values())).shape[:2], dtype=bool
+        )
         for ev in selected:
             img = exposures[float(ev)].mean(axis=2)
             current_reliable |= (img > self.reliable_low) & (img < self.reliable_high)
-
         best_ev, best_score = None, -float("inf")
         for ev in remaining:
-            ref_ev = self._best_ref_for_candidate(selected, float(ev))
+            ref_ev = self._best_ref_ev(selected, ev)
             ref = exposures[float(ref_ev)]
-            pred = self._predict_from_reference(ref, ref_ev, float(ev)).mean(axis=2)
+            pred = self._predict_from_reference(ref, ref_ev, ev).mean(axis=2)
             cand_rel = (pred > self.reliable_low) & (pred < self.reliable_high)
             gain = np.mean((~current_reliable) & cand_rel)
             overlap = np.mean(current_reliable & cand_rel)

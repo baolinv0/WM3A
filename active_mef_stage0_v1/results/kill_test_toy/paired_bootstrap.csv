@@ -1,0 +1,10 @@
+budget,method_a,method_b,mean,lo,hi,n
+1,oracle_greedy,strong_heuristic,0.0,0.0,0.0,8
+1,oracle_greedy,best_fixed,0.0,0.0,0.0,8
+1,oracle_sequence,oracle_greedy,0.0,0.0,0.0,8
+2,oracle_greedy,strong_heuristic,5.899394672792777,5.050073150679271,6.6532810670967955,8
+2,oracle_greedy,best_fixed,0.08776268804918264,0.0,0.2632880641475479,8
+2,oracle_sequence,oracle_greedy,0.0,0.0,0.0,8
+3,oracle_greedy,strong_heuristic,6.7834784558180825,5.925327612841421,7.561451582721992,8
+3,oracle_greedy,best_fixed,0.21621699364930436,0.0,0.5815441858841499,8
+3,oracle_sequence,oracle_greedy,0.0,0.0,0.0,8

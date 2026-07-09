@@ -3,12 +3,7 @@ __pycache__/
 .venv/
 .download_venv/
 .pytest_cache/
-data/
-outputs/
-results/
-SICE/
-*.zip
-*.rar
+SICE*/
 *.pth
 *.pt
 *.ckpt

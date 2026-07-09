@@ -40,15 +40,9 @@ class CameraSimulator:
     temporal_samples: int = 8
     seed: int = 0
 
-    def _normalization_scale(self, hdr: np.ndarray) -> float:
-        finite = hdr[np.isfinite(hdr)]
-        if finite.size == 0:
-            return 1.0
-        p = float(np.percentile(finite, self.reference_percentile))
-        return self.reference_level / max(p, 1e-8)
-
     def normalize_hdr(self, hdr: np.ndarray) -> np.ndarray:
-        scale = self._normalization_scale(hdr)
+        p = float(np.percentile(hdr[np.isfinite(hdr)], self.reference_percentile))
+        scale = self.reference_level / max(p, 1e-8)
         return np.maximum(hdr * scale, 0.0).astype(np.float32)
 
     def _temporal_integrate(
@@ -74,18 +68,20 @@ class CameraSimulator:
 
     def _simulate_normalized(
         self,
-        hdr: np.ndarray,
+        hdr0: np.ndarray,
         ev: float,
-        hdr_next: np.ndarray | None = None,
-        frame_dt: float | None = None,
-        rng: np.random.Generator | None = None,
+        hdr1: np.ndarray | None,
+        frame_dt: float,
+        rng: np.random.Generator,
     ) -> np.ndarray:
-        frame_dt = self.frame_dt if frame_dt is None else float(frame_dt)
-        rng = rng or np.random.default_rng(self.seed)
+        """Core simulation that operates on already-normalized HDR frames.
 
+        Separated from ``simulate`` so that ``make_pool`` can normalize once
+        rather than once per EV.
+        """
         exposure_mult = 2.0 ** float(ev)
         shutter = self.base_shutter * exposure_mult
-        integrated = self._temporal_integrate(hdr, hdr_next, shutter, frame_dt)
+        integrated = self._temporal_integrate(hdr0, hdr1, shutter, frame_dt)
 
         sensor_linear = np.maximum(integrated * exposure_mult, 0.0)
         electrons = np.clip(sensor_linear, 0.0, 1.0) * self.full_well_e
@@ -106,9 +102,11 @@ class CameraSimulator:
         frame_dt: float | None = None,
         rng: np.random.Generator | None = None,
     ) -> np.ndarray:
-        scale = self._normalization_scale(hdr)
-        hdr0 = np.maximum(hdr * scale, 0.0).astype(np.float32)
-        hdr1 = np.maximum(hdr_next * scale, 0.0).astype(np.float32) if hdr_next is not None else None
+        """Public API: normalise the raw HDR then delegate to _simulate_normalized."""
+        frame_dt = self.frame_dt if frame_dt is None else float(frame_dt)
+        rng = rng or np.random.default_rng(self.seed)
+        hdr0 = self.normalize_hdr(hdr)
+        hdr1 = self.normalize_hdr(hdr_next) if hdr_next is not None else None
         return self._simulate_normalized(hdr0, ev, hdr1, frame_dt, rng)
 
     def make_pool(
@@ -119,12 +117,17 @@ class CameraSimulator:
         frame_dt: float | None = None,
         scene_seed: int = 0,
     ) -> dict[float, np.ndarray]:
-        scale = self._normalization_scale(hdr)
-        hdr0 = np.maximum(hdr * scale, 0.0).astype(np.float32)
-        hdr1 = np.maximum(hdr_next * scale, 0.0).astype(np.float32) if hdr_next is not None else None
+        """Simulate the full exposure pool for one scene.
 
+        ``normalize_hdr`` is called once here, not once per EV, so all
+        simulated frames share the same radiometric scale.
+        """
+        frame_dt = self.frame_dt if frame_dt is None else float(frame_dt)
+        hdr0 = self.normalize_hdr(hdr)
+        hdr1 = self.normalize_hdr(hdr_next) if hdr_next is not None else None
         pool: dict[float, np.ndarray] = {}
         for i, ev in enumerate(evs):
+            # Each EV gets a deterministic but independent RNG stream.
             rng = np.random.default_rng(self.seed + int(scene_seed) + 1009 * i)
             pool[float(ev)] = self._simulate_normalized(hdr0, ev, hdr1, frame_dt, rng)
         return pool

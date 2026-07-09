@@ -1,0 +1,288 @@
+{"scene_id": "scene_012", "current": [0.0], "action": -3.0, "score_before": 37.87395663068551, "score_after": 36.481488029311244, "gain": -1.3924686013742686}
+{"scene_id": "scene_012", "current": [0.0], "action": -2.0, "score_before": 37.87395663068551, "score_after": 38.21942801314714, "gain": 0.3454713824616249}
+{"scene_id": "scene_012", "current": [0.0], "action": -1.0, "score_before": 37.87395663068551, "score_after": 39.44526441116474, "gain": 1.5713077804792306}
+{"scene_id": "scene_012", "current": [0.0], "action": 1.0, "score_before": 37.87395663068551, "score_after": 37.559536496123414, "gain": -0.3144201345620985}
+{"scene_id": "scene_012", "current": [0.0], "action": 2.0, "score_before": 37.87395663068551, "score_after": 33.43779065276476, "gain": -4.436165977920751}
+{"scene_id": "scene_012", "current": [0.0], "action": 3.0, "score_before": 37.87395663068551, "score_after": 35.1326772441611, "gain": -2.741279386524411}
+{"scene_id": "scene_012", "current": [-3.0, 0.0], "action": -2.0, "score_before": 36.481488029311244, "score_after": 37.57567495230056, "gain": 1.0941869229893157}
+{"scene_id": "scene_012", "current": [-3.0, 0.0], "action": -1.0, "score_before": 36.481488029311244, "score_after": 38.4639459808803, "gain": 1.982457951569053}
+{"scene_id": "scene_012", "current": [-3.0, 0.0], "action": 1.0, "score_before": 36.481488029311244, "score_after": 37.83314755948721, "gain": 1.351659530175965}
+{"scene_id": "scene_012", "current": [-3.0, 0.0], "action": 2.0, "score_before": 36.481488029311244, "score_after": 34.336706159087115, "gain": -2.1447818702241292}
+{"scene_id": "scene_012", "current": [-3.0, 0.0], "action": 3.0, "score_before": 36.481488029311244, "score_after": 35.72455315842042, "gain": -0.7569348708908237}
+{"scene_id": "scene_012", "current": [-2.0, 0.0], "action": -3.0, "score_before": 38.21942801314714, "score_after": 37.57567495230056, "gain": -0.6437530608465778}
+{"scene_id": "scene_012", "current": [-2.0, 0.0], "action": -1.0, "score_before": 38.21942801314714, "score_after": 39.81035486141943, "gain": 1.5909268482722894}
+{"scene_id": "scene_012", "current": [-2.0, 0.0], "action": 1.0, "score_before": 38.21942801314714, "score_after": 38.56490849878481, "gain": 0.34548048563767253}
+{"scene_id": "scene_012", "current": [-2.0, 0.0], "action": 2.0, "score_before": 38.21942801314714, "score_after": 34.74763226655465, "gain": -3.471795746592484}
+{"scene_id": "scene_012", "current": [-2.0, 0.0], "action": 3.0, "score_before": 38.21942801314714, "score_after": 36.039654105449834, "gain": -2.179773907697303}
+{"scene_id": "scene_012", "current": [-1.0, 0.0], "action": -3.0, "score_before": 39.44526441116474, "score_after": 38.4639459808803, "gain": -0.9813184302844462}
+{"scene_id": "scene_012", "current": [-1.0, 0.0], "action": -2.0, "score_before": 39.44526441116474, "score_after": 39.81035486141943, "gain": 0.3650904502546837}
+{"scene_id": "scene_012", "current": [-1.0, 0.0], "action": 1.0, "score_before": 39.44526441116474, "score_after": 38.84208034063844, "gain": -0.6031840705263036}
+{"scene_id": "scene_012", "current": [-1.0, 0.0], "action": 2.0, "score_before": 39.44526441116474, "score_after": 34.94641058800467, "gain": -4.498853823160076}
+{"scene_id": "scene_012", "current": [-1.0, 0.0], "action": 3.0, "score_before": 39.44526441116474, "score_after": 36.14699628215335, "gain": -3.29826812901139}
+{"scene_id": "scene_012", "current": [0.0, 1.0], "action": -3.0, "score_before": 37.559536496123414, "score_after": 37.83314755948721, "gain": 0.2736110633637949}
+{"scene_id": "scene_012", "current": [0.0, 1.0], "action": -2.0, "score_before": 37.559536496123414, "score_after": 38.56490849878481, "gain": 1.005372002661396}
+{"scene_id": "scene_012", "current": [0.0, 1.0], "action": -1.0, "score_before": 37.559536496123414, "score_after": 38.84208034063844, "gain": 1.2825438445150255}
+{"scene_id": "scene_012", "current": [0.0, 1.0], "action": 2.0, "score_before": 37.559536496123414, "score_after": 34.2679357508633, "gain": -3.291600745260112}
+{"scene_id": "scene_012", "current": [0.0, 1.0], "action": 3.0, "score_before": 37.559536496123414, "score_after": 35.07070247415915, "gain": -2.4888340219642657}
+{"scene_id": "scene_012", "current": [0.0, 2.0], "action": -3.0, "score_before": 33.43779065276476, "score_after": 34.336706159087115, "gain": 0.8989155063223535}
+{"scene_id": "scene_012", "current": [0.0, 2.0], "action": -2.0, "score_before": 33.43779065276476, "score_after": 34.74763226655465, "gain": 1.3098416137898923}
+{"scene_id": "scene_012", "current": [0.0, 2.0], "action": -1.0, "score_before": 33.43779065276476, "score_after": 34.94641058800467, "gain": 1.5086199352399063}
+{"scene_id": "scene_012", "current": [0.0, 2.0], "action": 1.0, "score_before": 33.43779065276476, "score_after": 34.2679357508633, "gain": 0.8301450980985408}
+{"scene_id": "scene_012", "current": [0.0, 2.0], "action": 3.0, "score_before": 33.43779065276476, "score_after": 32.95402744042313, "gain": -0.48376321234162845}
+{"scene_id": "scene_012", "current": [0.0, 3.0], "action": -3.0, "score_before": 35.1326772441611, "score_after": 35.72455315842042, "gain": 0.5918759142593188}
+{"scene_id": "scene_012", "current": [0.0, 3.0], "action": -2.0, "score_before": 35.1326772441611, "score_after": 36.039654105449834, "gain": 0.906976861288733}
+{"scene_id": "scene_012", "current": [0.0, 3.0], "action": -1.0, "score_before": 35.1326772441611, "score_after": 36.14699628215335, "gain": 1.0143190379922515}
+{"scene_id": "scene_012", "current": [0.0, 3.0], "action": 1.0, "score_before": 35.1326772441611, "score_after": 35.07070247415915, "gain": -0.06197477000195306}
+{"scene_id": "scene_012", "current": [0.0, 3.0], "action": 2.0, "score_before": 35.1326772441611, "score_after": 32.95402744042313, "gain": -2.1786498037379687}
+{"scene_id": "scene_013", "current": [0.0], "action": -3.0, "score_before": 37.336049111710864, "score_after": 36.313230916677114, "gain": -1.02281819503375}
+{"scene_id": "scene_013", "current": [0.0], "action": -2.0, "score_before": 37.336049111710864, "score_after": 37.78204241398712, "gain": 0.445993302276257}
+{"scene_id": "scene_013", "current": [0.0], "action": -1.0, "score_before": 37.336049111710864, "score_after": 38.88453510727287, "gain": 1.5484859955620038}
+{"scene_id": "scene_013", "current": [0.0], "action": 1.0, "score_before": 37.336049111710864, "score_after": 36.483547206214425, "gain": -0.8525019054964389}
+{"scene_id": "scene_013", "current": [0.0], "action": 2.0, "score_before": 37.336049111710864, "score_after": 32.18818539108426, "gain": -5.147863720626603}
+{"scene_id": "scene_013", "current": [0.0], "action": 3.0, "score_before": 37.336049111710864, "score_after": 33.933591045186574, "gain": -3.4024580665242894}
+{"scene_id": "scene_013", "current": [-3.0, 0.0], "action": -2.0, "score_before": 36.313230916677114, "score_after": 37.261705064626774, "gain": 0.9484741479496606}
+{"scene_id": "scene_013", "current": [-3.0, 0.0], "action": -1.0, "score_before": 36.313230916677114, "score_after": 38.17397575649136, "gain": 1.8607448398142452}
+{"scene_id": "scene_013", "current": [-3.0, 0.0], "action": 1.0, "score_before": 36.313230916677114, "score_after": 36.990943804972325, "gain": 0.6777128882952113}
+{"scene_id": "scene_013", "current": [-3.0, 0.0], "action": 2.0, "score_before": 36.313230916677114, "score_after": 33.176953770320175, "gain": -3.1362771463569388}
+{"scene_id": "scene_013", "current": [-3.0, 0.0], "action": 3.0, "score_before": 36.313230916677114, "score_after": 34.62320607135531, "gain": -1.6900248453218012}
+{"scene_id": "scene_013", "current": [-2.0, 0.0], "action": -3.0, "score_before": 37.78204241398712, "score_after": 37.261705064626774, "gain": -0.5203373493603465}
+{"scene_id": "scene_013", "current": [-2.0, 0.0], "action": -1.0, "score_before": 37.78204241398712, "score_after": 39.288186772906265, "gain": 1.506144358919144}
+{"scene_id": "scene_013", "current": [-2.0, 0.0], "action": 1.0, "score_before": 37.78204241398712, "score_after": 37.603953617771396, "gain": -0.17808879621572515}
+{"scene_id": "scene_013", "current": [-2.0, 0.0], "action": 2.0, "score_before": 37.78204241398712, "score_after": 33.541256257405514, "gain": -4.240786156581606}
+{"scene_id": "scene_013", "current": [-2.0, 0.0], "action": 3.0, "score_before": 37.78204241398712, "score_after": 34.8992855094796, "gain": -2.8827569045075236}
+{"scene_id": "scene_013", "current": [-1.0, 0.0], "action": -3.0, "score_before": 38.88453510727287, "score_after": 38.17397575649136, "gain": -0.7105593507815087}
+{"scene_id": "scene_013", "current": [-1.0, 0.0], "action": -2.0, "score_before": 38.88453510727287, "score_after": 39.288186772906265, "gain": 0.40365166563339727}
+{"scene_id": "scene_013", "current": [-1.0, 0.0], "action": 1.0, "score_before": 38.88453510727287, "score_after": 37.81776043144086, "gain": -1.0667746758320078}
+{"scene_id": "scene_013", "current": [-1.0, 0.0], "action": 2.0, "score_before": 38.88453510727287, "score_after": 33.72055139055029, "gain": -5.163983716722576}
+{"scene_id": "scene_013", "current": [-1.0, 0.0], "action": 3.0, "score_before": 38.88453510727287, "score_after": 34.99262255882996, "gain": -3.8919125484429102}
+{"scene_id": "scene_013", "current": [0.0, 1.0], "action": -3.0, "score_before": 36.483547206214425, "score_after": 36.990943804972325, "gain": 0.5073965987579001}
+{"scene_id": "scene_013", "current": [0.0, 1.0], "action": -2.0, "score_before": 36.483547206214425, "score_after": 37.603953617771396, "gain": 1.1204064115569707}
+{"scene_id": "scene_013", "current": [0.0, 1.0], "action": -1.0, "score_before": 36.483547206214425, "score_after": 37.81776043144086, "gain": 1.334213225226435}
+{"scene_id": "scene_013", "current": [0.0, 1.0], "action": 2.0, "score_before": 36.483547206214425, "score_after": 33.02040895513795, "gain": -3.4631382510764723}
+{"scene_id": "scene_013", "current": [0.0, 1.0], "action": 3.0, "score_before": 36.483547206214425, "score_after": 33.84921439292241, "gain": -2.634332813292012}
+{"scene_id": "scene_013", "current": [0.0, 2.0], "action": -3.0, "score_before": 32.18818539108426, "score_after": 33.176953770320175, "gain": 0.9887683792359141}
+{"scene_id": "scene_013", "current": [0.0, 2.0], "action": -2.0, "score_before": 32.18818539108426, "score_after": 33.541256257405514, "gain": 1.3530708663212536}
+{"scene_id": "scene_013", "current": [0.0, 2.0], "action": -1.0, "score_before": 32.18818539108426, "score_after": 33.72055139055029, "gain": 1.5323659994660304}
+{"scene_id": "scene_013", "current": [0.0, 2.0], "action": 1.0, "score_before": 32.18818539108426, "score_after": 33.02040895513795, "gain": 0.8322235640536917}
+{"scene_id": "scene_013", "current": [0.0, 2.0], "action": 3.0, "score_before": 32.18818539108426, "score_after": 31.66665552438662, "gain": -0.5215298666976409}
+{"scene_id": "scene_013", "current": [0.0, 3.0], "action": -3.0, "score_before": 33.933591045186574, "score_after": 34.62320607135531, "gain": 0.6896150261687382}
+{"scene_id": "scene_013", "current": [0.0, 3.0], "action": -2.0, "score_before": 33.933591045186574, "score_after": 34.8992855094796, "gain": 0.9656944642930227}
+{"scene_id": "scene_013", "current": [0.0, 3.0], "action": -1.0, "score_before": 33.933591045186574, "score_after": 34.99262255882996, "gain": 1.059031513643383}
+{"scene_id": "scene_013", "current": [0.0, 3.0], "action": 1.0, "score_before": 33.933591045186574, "score_after": 33.84921439292241, "gain": -0.08437665226416158}
+{"scene_id": "scene_013", "current": [0.0, 3.0], "action": 2.0, "score_before": 33.933591045186574, "score_after": 31.66665552438662, "gain": -2.2669355207999544}
+{"scene_id": "scene_014", "current": [0.0], "action": -3.0, "score_before": 36.74665259886985, "score_after": 35.994604903980886, "gain": -0.7520476948889652}
+{"scene_id": "scene_014", "current": [0.0], "action": -2.0, "score_before": 36.74665259886985, "score_after": 37.47655677136194, "gain": 0.7299041724920912}
+{"scene_id": "scene_014", "current": [0.0], "action": -1.0, "score_before": 36.74665259886985, "score_after": 38.491412621214, "gain": 1.7447600223441526}
+{"scene_id": "scene_014", "current": [0.0], "action": 1.0, "score_before": 36.74665259886985, "score_after": 35.59821309743596, "gain": -1.1484395014338915}
+{"scene_id": "scene_014", "current": [0.0], "action": 2.0, "score_before": 36.74665259886985, "score_after": 31.21490012268215, "gain": -5.531752476187702}
+{"scene_id": "scene_014", "current": [0.0], "action": 3.0, "score_before": 36.74665259886985, "score_after": 33.055783935761895, "gain": -3.690868663107956}
+{"scene_id": "scene_014", "current": [-3.0, 0.0], "action": -2.0, "score_before": 35.994604903980886, "score_after": 37.04155218106807, "gain": 1.0469472770871846}
+{"scene_id": "scene_014", "current": [-3.0, 0.0], "action": -1.0, "score_before": 35.994604903980886, "score_after": 37.87518464109079, "gain": 1.8805797371099047}
+{"scene_id": "scene_014", "current": [-3.0, 0.0], "action": 1.0, "score_before": 35.994604903980886, "score_after": 36.247084390518495, "gain": 0.25247948653760943}
+{"scene_id": "scene_014", "current": [-3.0, 0.0], "action": 2.0, "score_before": 35.994604903980886, "score_after": 32.25798260700431, "gain": -3.736622296976577}
+{"scene_id": "scene_014", "current": [-3.0, 0.0], "action": 3.0, "score_before": 35.994604903980886, "score_after": 33.804269863208965, "gain": -2.19033504077192}
+{"scene_id": "scene_014", "current": [-2.0, 0.0], "action": -3.0, "score_before": 37.47655677136194, "score_after": 37.04155218106807, "gain": -0.43500459029387173}
+{"scene_id": "scene_014", "current": [-2.0, 0.0], "action": -1.0, "score_before": 37.47655677136194, "score_after": 38.95276710272562, "gain": 1.4762103313636814}
+{"scene_id": "scene_014", "current": [-2.0, 0.0], "action": 1.0, "score_before": 37.47655677136194, "score_after": 36.83487028410423, "gain": -0.641686487257715}
+{"scene_id": "scene_014", "current": [-2.0, 0.0], "action": 2.0, "score_before": 37.47655677136194, "score_after": 32.59704298129203, "gain": -4.879513790069915}
+{"scene_id": "scene_014", "current": [-2.0, 0.0], "action": 3.0, "score_before": 37.47655677136194, "score_after": 34.064653348659505, "gain": -3.411903422702437}
+{"scene_id": "scene_014", "current": [-1.0, 0.0], "action": -3.0, "score_before": 38.491412621214, "score_after": 37.87518464109079, "gain": -0.6162279801232131}
+{"scene_id": "scene_014", "current": [-1.0, 0.0], "action": -2.0, "score_before": 38.491412621214, "score_after": 38.95276710272562, "gain": 0.46135448151161995}
+{"scene_id": "scene_014", "current": [-1.0, 0.0], "action": 1.0, "score_before": 38.491412621214, "score_after": 36.992245024733236, "gain": -1.499167596480767}
+{"scene_id": "scene_014", "current": [-1.0, 0.0], "action": 2.0, "score_before": 38.491412621214, "score_after": 32.76954667632864, "gain": -5.721865944885366}
+{"scene_id": "scene_014", "current": [-1.0, 0.0], "action": 3.0, "score_before": 38.491412621214, "score_after": 34.14811268218456, "gain": -4.343299939029443}
+{"scene_id": "scene_014", "current": [0.0, 1.0], "action": -3.0, "score_before": 35.59821309743596, "score_after": 36.247084390518495, "gain": 0.6488712930825358}
+{"scene_id": "scene_014", "current": [0.0, 1.0], "action": -2.0, "score_before": 35.59821309743596, "score_after": 36.83487028410423, "gain": 1.2366571866682676}
+{"scene_id": "scene_014", "current": [0.0, 1.0], "action": -1.0, "score_before": 35.59821309743596, "score_after": 36.992245024733236, "gain": 1.3940319272972772}
+{"scene_id": "scene_014", "current": [0.0, 1.0], "action": 2.0, "score_before": 35.59821309743596, "score_after": 32.05377146526854, "gain": -3.5444416321674197}
+{"scene_id": "scene_014", "current": [0.0, 1.0], "action": 3.0, "score_before": 35.59821309743596, "score_after": 32.937554832595694, "gain": -2.660658264840265}
+{"scene_id": "scene_014", "current": [0.0, 2.0], "action": -3.0, "score_before": 31.21490012268215, "score_after": 32.25798260700431, "gain": 1.0430824843221593}
+{"scene_id": "scene_014", "current": [0.0, 2.0], "action": -2.0, "score_before": 31.21490012268215, "score_after": 32.59704298129203, "gain": 1.3821428586098783}
+{"scene_id": "scene_014", "current": [0.0, 2.0], "action": -1.0, "score_before": 31.21490012268215, "score_after": 32.76954667632864, "gain": 1.5546465536464886}
+{"scene_id": "scene_014", "current": [0.0, 2.0], "action": 1.0, "score_before": 31.21490012268215, "score_after": 32.05377146526854, "gain": 0.8388713425863905}
+{"scene_id": "scene_014", "current": [0.0, 2.0], "action": 3.0, "score_before": 31.21490012268215, "score_after": 30.691246253736097, "gain": -0.5236538689460524}
+{"scene_id": "scene_014", "current": [0.0, 3.0], "action": -3.0, "score_before": 33.055783935761895, "score_after": 33.804269863208965, "gain": 0.7484859274470708}
+{"scene_id": "scene_014", "current": [0.0, 3.0], "action": -2.0, "score_before": 33.055783935761895, "score_after": 34.064653348659505, "gain": 1.0088694128976101}
+{"scene_id": "scene_014", "current": [0.0, 3.0], "action": -1.0, "score_before": 33.055783935761895, "score_after": 34.14811268218456, "gain": 1.092328746422666}
+{"scene_id": "scene_014", "current": [0.0, 3.0], "action": 1.0, "score_before": 33.055783935761895, "score_after": 32.937554832595694, "gain": -0.11822910316620039}
+{"scene_id": "scene_014", "current": [0.0, 3.0], "action": 2.0, "score_before": 33.055783935761895, "score_after": 30.691246253736097, "gain": -2.364537682025798}
+{"scene_id": "scene_015", "current": [0.0], "action": -3.0, "score_before": 38.506872470043646, "score_after": 36.433195525665674, "gain": -2.073676944377972}
+{"scene_id": "scene_015", "current": [0.0], "action": -2.0, "score_before": 38.506872470043646, "score_after": 38.152859090709235, "gain": -0.3540133793344111}
+{"scene_id": "scene_015", "current": [0.0], "action": -1.0, "score_before": 38.506872470043646, "score_after": 39.86489956612712, "gain": 1.3580270960834753}
+{"scene_id": "scene_015", "current": [0.0], "action": 1.0, "score_before": 38.506872470043646, "score_after": 40.56700107052058, "gain": 2.0601286004769364}
+{"scene_id": "scene_015", "current": [0.0], "action": 2.0, "score_before": 38.506872470043646, "score_after": 37.38706223852385, "gain": -1.1198102315197929}
+{"scene_id": "scene_015", "current": [0.0], "action": 3.0, "score_before": 38.506872470043646, "score_after": 39.138372857300624, "gain": 0.6315003872569775}
+{"scene_id": "scene_015", "current": [-3.0, 0.0], "action": -2.0, "score_before": 36.433195525665674, "score_after": 37.32574220382994, "gain": 0.8925466781642655}
+{"scene_id": "scene_015", "current": [-3.0, 0.0], "action": -1.0, "score_before": 36.433195525665674, "score_after": 38.55361889283546, "gain": 2.120423367169785}
+{"scene_id": "scene_015", "current": [-3.0, 0.0], "action": 1.0, "score_before": 36.433195525665674, "score_after": 39.589853617638475, "gain": 3.156658091972801}
+{"scene_id": "scene_015", "current": [-3.0, 0.0], "action": 2.0, "score_before": 36.433195525665674, "score_after": 37.636329821290474, "gain": 1.2031342956247997}
+{"scene_id": "scene_015", "current": [-3.0, 0.0], "action": 3.0, "score_before": 36.433195525665674, "score_after": 39.18218461501789, "gain": 2.7489890893522144}
+{"scene_id": "scene_015", "current": [-2.0, 0.0], "action": -3.0, "score_before": 38.152859090709235, "score_after": 37.32574220382994, "gain": -0.8271168868792955}
+{"scene_id": "scene_015", "current": [-2.0, 0.0], "action": -1.0, "score_before": 38.152859090709235, "score_after": 39.93975633258308, "gain": 1.7868972418738451}
+{"scene_id": "scene_015", "current": [-2.0, 0.0], "action": 1.0, "score_before": 38.152859090709235, "score_after": 40.682989681682365, "gain": 2.5301305909731298}
+{"scene_id": "scene_015", "current": [-2.0, 0.0], "action": 2.0, "score_before": 38.152859090709235, "score_after": 38.255714638670405, "gain": 0.10285554796116969}
+{"scene_id": "scene_015", "current": [-2.0, 0.0], "action": 3.0, "score_before": 38.152859090709235, "score_after": 39.70249293048944, "gain": 1.5496338397802063}
+{"scene_id": "scene_015", "current": [-1.0, 0.0], "action": -3.0, "score_before": 39.86489956612712, "score_after": 38.55361889283546, "gain": -1.3112806732916624}
+{"scene_id": "scene_015", "current": [-1.0, 0.0], "action": -2.0, "score_before": 39.86489956612712, "score_after": 39.93975633258308, "gain": 0.07485676645595873}
+{"scene_id": "scene_015", "current": [-1.0, 0.0], "action": 1.0, "score_before": 39.86489956612712, "score_after": 41.40106510152246, "gain": 1.536165535395341}
+{"scene_id": "scene_015", "current": [-1.0, 0.0], "action": 2.0, "score_before": 39.86489956612712, "score_after": 38.63669829886424, "gain": -1.2282012672628824}
+{"scene_id": "scene_015", "current": [-1.0, 0.0], "action": 3.0, "score_before": 39.86489956612712, "score_after": 39.99253789812387, "gain": 0.12763833199674934}
+{"scene_id": "scene_015", "current": [0.0, 1.0], "action": -3.0, "score_before": 40.56700107052058, "score_after": 39.589853617638475, "gain": -0.9771474528821074}
+{"scene_id": "scene_015", "current": [0.0, 1.0], "action": -2.0, "score_before": 40.56700107052058, "score_after": 40.682989681682365, "gain": 0.11598861116178227}
+{"scene_id": "scene_015", "current": [0.0, 1.0], "action": -1.0, "score_before": 40.56700107052058, "score_after": 41.40106510152246, "gain": 0.8340640310018799}
+{"scene_id": "scene_015", "current": [0.0, 1.0], "action": 2.0, "score_before": 40.56700107052058, "score_after": 38.29893050696807, "gain": -2.268070563552513}
+{"scene_id": "scene_015", "current": [0.0, 1.0], "action": 3.0, "score_before": 40.56700107052058, "score_after": 39.16756222437466, "gain": -1.3994388461459195}
+{"scene_id": "scene_015", "current": [0.0, 2.0], "action": -3.0, "score_before": 37.38706223852385, "score_after": 37.636329821290474, "gain": 0.24926758276662042}
+{"scene_id": "scene_015", "current": [0.0, 2.0], "action": -2.0, "score_before": 37.38706223852385, "score_after": 38.255714638670405, "gain": 0.8686524001465514}
+{"scene_id": "scene_015", "current": [0.0, 2.0], "action": -1.0, "score_before": 37.38706223852385, "score_after": 38.63669829886424, "gain": 1.2496360603403858}
+{"scene_id": "scene_015", "current": [0.0, 2.0], "action": 1.0, "score_before": 37.38706223852385, "score_after": 38.29893050696807, "gain": 0.9118682684442163}
+{"scene_id": "scene_015", "current": [0.0, 2.0], "action": 3.0, "score_before": 37.38706223852385, "score_after": 37.10853776279029, "gain": -0.27852447573356187}
+{"scene_id": "scene_015", "current": [0.0, 3.0], "action": -3.0, "score_before": 39.138372857300624, "score_after": 39.18218461501789, "gain": 0.043811757717264754}
+{"scene_id": "scene_015", "current": [0.0, 3.0], "action": -2.0, "score_before": 39.138372857300624, "score_after": 39.70249293048944, "gain": 0.5641200731888176}
+{"scene_id": "scene_015", "current": [0.0, 3.0], "action": -1.0, "score_before": 39.138372857300624, "score_after": 39.99253789812387, "gain": 0.8541650408232471}
+{"scene_id": "scene_015", "current": [0.0, 3.0], "action": 1.0, "score_before": 39.138372857300624, "score_after": 39.16756222437466, "gain": 0.029189367074039296}
+{"scene_id": "scene_015", "current": [0.0, 3.0], "action": 2.0, "score_before": 39.138372857300624, "score_after": 37.10853776279029, "gain": -2.0298350945103323}
+{"scene_id": "scene_016", "current": [0.0], "action": -3.0, "score_before": 37.872627206359496, "score_after": 36.22726926834916, "gain": -1.645357938010335}
+{"scene_id": "scene_016", "current": [0.0], "action": -2.0, "score_before": 37.872627206359496, "score_after": 37.715728655135464, "gain": -0.15689855122403173}
+{"scene_id": "scene_016", "current": [0.0], "action": -1.0, "score_before": 37.872627206359496, "score_after": 39.407076774812595, "gain": 1.5344495684530983}
+{"scene_id": "scene_016", "current": [0.0], "action": 1.0, "score_before": 37.872627206359496, "score_after": 38.60930150515016, "gain": 0.7366742987906605}
+{"scene_id": "scene_016", "current": [0.0], "action": 2.0, "score_before": 37.872627206359496, "score_after": 34.72885360160463, "gain": -3.1437736047548697}
+{"scene_id": "scene_016", "current": [0.0], "action": 3.0, "score_before": 37.872627206359496, "score_after": 36.61277762480547, "gain": -1.259849581554029}
+{"scene_id": "scene_016", "current": [-3.0, 0.0], "action": -2.0, "score_before": 36.22726926834916, "score_after": 37.063638892092364, "gain": 0.8363696237432023}
+{"scene_id": "scene_016", "current": [-3.0, 0.0], "action": -1.0, "score_before": 36.22726926834916, "score_after": 38.23089017290322, "gain": 2.0036209045540616}
+{"scene_id": "scene_016", "current": [-3.0, 0.0], "action": 1.0, "score_before": 36.22726926834916, "score_after": 38.39230683347025, "gain": 2.1650375651210894}
+{"scene_id": "scene_016", "current": [-3.0, 0.0], "action": 2.0, "score_before": 36.22726926834916, "score_after": 35.4205678328044, "gain": -0.8067014355447597}
+{"scene_id": "scene_016", "current": [-3.0, 0.0], "action": 3.0, "score_before": 36.22726926834916, "score_after": 37.057834262664755, "gain": 0.8305649943155942}
+{"scene_id": "scene_016", "current": [-2.0, 0.0], "action": -3.0, "score_before": 37.715728655135464, "score_after": 37.063638892092364, "gain": -0.6520897630431008}
+{"scene_id": "scene_016", "current": [-2.0, 0.0], "action": -1.0, "score_before": 37.715728655135464, "score_after": 39.45486683582544, "gain": 1.7391381806899773}
+{"scene_id": "scene_016", "current": [-2.0, 0.0], "action": 1.0, "score_before": 37.715728655135464, "score_after": 39.19333973955953, "gain": 1.477611084424069}
+{"scene_id": "scene_016", "current": [-2.0, 0.0], "action": 2.0, "score_before": 37.715728655135464, "score_after": 35.85882391487347, "gain": -1.8569047402619958}
+{"scene_id": "scene_016", "current": [-2.0, 0.0], "action": 3.0, "score_before": 37.715728655135464, "score_after": 37.434860812015785, "gain": -0.2808678431196796}
+{"scene_id": "scene_016", "current": [-1.0, 0.0], "action": -3.0, "score_before": 39.407076774812595, "score_after": 38.23089017290322, "gain": -1.1761866019093716}
+{"scene_id": "scene_016", "current": [-1.0, 0.0], "action": -2.0, "score_before": 39.407076774812595, "score_after": 39.45486683582544, "gain": 0.04779006101284722}
+{"scene_id": "scene_016", "current": [-1.0, 0.0], "action": 1.0, "score_before": 39.407076774812595, "score_after": 39.723294016080494, "gain": 0.31621724126789985}
+{"scene_id": "scene_016", "current": [-1.0, 0.0], "action": 2.0, "score_before": 39.407076774812595, "score_after": 36.13744520208514, "gain": -3.269631572727455}
+{"scene_id": "scene_016", "current": [-1.0, 0.0], "action": 3.0, "score_before": 39.407076774812595, "score_after": 37.61941165887794, "gain": -1.787665115934658}
+{"scene_id": "scene_016", "current": [0.0, 1.0], "action": -3.0, "score_before": 38.60930150515016, "score_after": 38.39230683347025, "gain": -0.21699467167990605}
+{"scene_id": "scene_016", "current": [0.0, 1.0], "action": -2.0, "score_before": 38.60930150515016, "score_after": 39.19333973955953, "gain": 0.5840382344093769}
+{"scene_id": "scene_016", "current": [0.0, 1.0], "action": -1.0, "score_before": 38.60930150515016, "score_after": 39.723294016080494, "gain": 1.1139925109303377}
+{"scene_id": "scene_016", "current": [0.0, 1.0], "action": 2.0, "score_before": 38.60930150515016, "score_after": 35.62381996507311, "gain": -2.9854815400770462}
+{"scene_id": "scene_016", "current": [0.0, 1.0], "action": 3.0, "score_before": 38.60930150515016, "score_after": 36.54618391597146, "gain": -2.0631175891786953}
+{"scene_id": "scene_016", "current": [0.0, 2.0], "action": -3.0, "score_before": 34.72885360160463, "score_after": 35.4205678328044, "gain": 0.691714231199775}
+{"scene_id": "scene_016", "current": [0.0, 2.0], "action": -2.0, "score_before": 34.72885360160463, "score_after": 35.85882391487347, "gain": 1.1299703132688421}
+{"scene_id": "scene_016", "current": [0.0, 2.0], "action": -1.0, "score_before": 34.72885360160463, "score_after": 36.13744520208514, "gain": 1.4085916004805128}
+{"scene_id": "scene_016", "current": [0.0, 2.0], "action": 1.0, "score_before": 34.72885360160463, "score_after": 35.62381996507311, "gain": 0.8949663634684839}
+{"scene_id": "scene_016", "current": [0.0, 2.0], "action": 3.0, "score_before": 34.72885360160463, "score_after": 34.310441391295356, "gain": -0.41841221030927045}
+{"scene_id": "scene_016", "current": [0.0, 3.0], "action": -3.0, "score_before": 36.61277762480547, "score_after": 37.057834262664755, "gain": 0.4450566378592882}
+{"scene_id": "scene_016", "current": [0.0, 3.0], "action": -2.0, "score_before": 36.61277762480547, "score_after": 37.434860812015785, "gain": 0.8220831872103176}
+{"scene_id": "scene_016", "current": [0.0, 3.0], "action": -1.0, "score_before": 36.61277762480547, "score_after": 37.61941165887794, "gain": 1.0066340340724693}
+{"scene_id": "scene_016", "current": [0.0, 3.0], "action": 1.0, "score_before": 36.61277762480547, "score_after": 36.54618391597146, "gain": -0.06659370883400584}
+{"scene_id": "scene_016", "current": [0.0, 3.0], "action": 2.0, "score_before": 36.61277762480547, "score_after": 34.310441391295356, "gain": -2.302336233510111}
+{"scene_id": "scene_017", "current": [0.0], "action": -3.0, "score_before": 37.39752178187469, "score_after": 35.971775055610365, "gain": -1.4257467262643218}
+{"scene_id": "scene_017", "current": [0.0], "action": -2.0, "score_before": 37.39752178187469, "score_after": 37.49975503627107, "gain": 0.10223325439638131}
+{"scene_id": "scene_017", "current": [0.0], "action": -1.0, "score_before": 37.39752178187469, "score_after": 38.8589843941596, "gain": 1.4614626122849117}
+{"scene_id": "scene_017", "current": [0.0], "action": 1.0, "score_before": 37.39752178187469, "score_after": 37.256427199936624, "gain": -0.1410945819380629}
+{"scene_id": "scene_017", "current": [0.0], "action": 2.0, "score_before": 37.39752178187469, "score_after": 33.06692366485069, "gain": -4.330598117023996}
+{"scene_id": "scene_017", "current": [0.0], "action": 3.0, "score_before": 37.39752178187469, "score_after": 35.043661938633676, "gain": -2.353859843241011}
+{"scene_id": "scene_017", "current": [-3.0, 0.0], "action": -2.0, "score_before": 35.971775055610365, "score_after": 36.89946628539951, "gain": 0.9276912297891471}
+{"scene_id": "scene_017", "current": [-3.0, 0.0], "action": -1.0, "score_before": 35.971775055610365, "score_after": 37.91304314892555, "gain": 1.9412680933151876}
+{"scene_id": "scene_017", "current": [-3.0, 0.0], "action": 1.0, "score_before": 35.971775055610365, "score_after": 37.41137891756642, "gain": 1.4396038619560514}
+{"scene_id": "scene_017", "current": [-3.0, 0.0], "action": 2.0, "score_before": 35.971775055610365, "score_after": 33.92369999268841, "gain": -2.048075062921953}
+{"scene_id": "scene_017", "current": [-3.0, 0.0], "action": 3.0, "score_before": 35.971775055610365, "score_after": 35.66932932754125, "gain": -0.3024457280691166}
+{"scene_id": "scene_017", "current": [-2.0, 0.0], "action": -3.0, "score_before": 37.49975503627107, "score_after": 36.89946628539951, "gain": -0.600288750871556}
+{"scene_id": "scene_017", "current": [-2.0, 0.0], "action": -1.0, "score_before": 37.49975503627107, "score_after": 39.07963189586012, "gain": 1.5798768595890493}
+{"scene_id": "scene_017", "current": [-2.0, 0.0], "action": 1.0, "score_before": 37.49975503627107, "score_after": 38.13901017889998, "gain": 0.6392551426289117}
+{"scene_id": "scene_017", "current": [-2.0, 0.0], "action": 2.0, "score_before": 37.49975503627107, "score_after": 34.30199871361245, "gain": -3.19775632265862}
+{"scene_id": "scene_017", "current": [-2.0, 0.0], "action": 3.0, "score_before": 37.49975503627107, "score_after": 35.976258947943585, "gain": -1.5234960883274837}
+{"scene_id": "scene_017", "current": [-1.0, 0.0], "action": -3.0, "score_before": 38.8589843941596, "score_after": 37.91304314892555, "gain": -0.9459412452340459}
+{"scene_id": "scene_017", "current": [-1.0, 0.0], "action": -2.0, "score_before": 38.8589843941596, "score_after": 39.07963189586012, "gain": 0.22064750170051894}
+{"scene_id": "scene_017", "current": [-1.0, 0.0], "action": 1.0, "score_before": 38.8589843941596, "score_after": 38.47883516441613, "gain": -0.3801492297434663}
+{"scene_id": "scene_017", "current": [-1.0, 0.0], "action": 2.0, "score_before": 38.8589843941596, "score_after": 34.53573300406015, "gain": -4.3232513900994505}
+{"scene_id": "scene_017", "current": [-1.0, 0.0], "action": 3.0, "score_before": 38.8589843941596, "score_after": 36.11744333741303, "gain": -2.74154105674657}
+{"scene_id": "scene_017", "current": [0.0, 1.0], "action": -3.0, "score_before": 37.256427199936624, "score_after": 37.41137891756642, "gain": 0.15495171762979254}
+{"scene_id": "scene_017", "current": [0.0, 1.0], "action": -2.0, "score_before": 37.256427199936624, "score_after": 38.13901017889998, "gain": 0.8825829789633559}
+{"scene_id": "scene_017", "current": [0.0, 1.0], "action": -1.0, "score_before": 37.256427199936624, "score_after": 38.47883516441613, "gain": 1.2224079644795083}
+{"scene_id": "scene_017", "current": [0.0, 1.0], "action": 2.0, "score_before": 37.256427199936624, "score_after": 33.94876398637325, "gain": -3.307663213563373}
+{"scene_id": "scene_017", "current": [0.0, 1.0], "action": 3.0, "score_before": 37.256427199936624, "score_after": 34.91615284493389, "gain": -2.340274355002734}
+{"scene_id": "scene_017", "current": [0.0, 2.0], "action": -3.0, "score_before": 33.06692366485069, "score_after": 33.92369999268841, "gain": 0.8567763278377214}
+{"scene_id": "scene_017", "current": [0.0, 2.0], "action": -2.0, "score_before": 33.06692366485069, "score_after": 34.30199871361245, "gain": 1.2350750487617574}
+{"scene_id": "scene_017", "current": [0.0, 2.0], "action": -1.0, "score_before": 33.06692366485069, "score_after": 34.53573300406015, "gain": 1.4688093392094572}
+{"scene_id": "scene_017", "current": [0.0, 2.0], "action": 1.0, "score_before": 33.06692366485069, "score_after": 33.94876398637325, "gain": 0.8818403215225601}
+{"scene_id": "scene_017", "current": [0.0, 2.0], "action": 3.0, "score_before": 33.06692366485069, "score_after": 32.598089150014566, "gain": -0.46883451483612504}
+{"scene_id": "scene_017", "current": [0.0, 3.0], "action": -3.0, "score_before": 35.043661938633676, "score_after": 35.66932932754125, "gain": 0.6256673889075728}
+{"scene_id": "scene_017", "current": [0.0, 3.0], "action": -2.0, "score_before": 35.043661938633676, "score_after": 35.976258947943585, "gain": 0.9325970093099087}
+{"scene_id": "scene_017", "current": [0.0, 3.0], "action": -1.0, "score_before": 35.043661938633676, "score_after": 36.11744333741303, "gain": 1.073781398779353}
+{"scene_id": "scene_017", "current": [0.0, 3.0], "action": 1.0, "score_before": 35.043661938633676, "score_after": 34.91615284493389, "gain": -0.12750909369978558}
+{"scene_id": "scene_017", "current": [0.0, 3.0], "action": 2.0, "score_before": 35.043661938633676, "score_after": 32.598089150014566, "gain": -2.44557278861911}
+{"scene_id": "scene_018", "current": [0.0], "action": -3.0, "score_before": 36.611699095331765, "score_after": 35.59280490531576, "gain": -1.018894190016006}
+{"scene_id": "scene_018", "current": [0.0], "action": -2.0, "score_before": 36.611699095331765, "score_after": 37.15188760099193, "gain": 0.5401885056601614}
+{"scene_id": "scene_018", "current": [0.0], "action": -1.0, "score_before": 36.611699095331765, "score_after": 38.34582047513002, "gain": 1.7341213797982533}
+{"scene_id": "scene_018", "current": [0.0], "action": 1.0, "score_before": 36.611699095331765, "score_after": 36.147553606866325, "gain": -0.4641454884654408}
+{"scene_id": "scene_018", "current": [0.0], "action": 2.0, "score_before": 36.611699095331765, "score_after": 31.808736331673508, "gain": -4.8029627636582575}
+{"scene_id": "scene_018", "current": [0.0], "action": 3.0, "score_before": 36.611699095331765, "score_after": 33.85217192804331, "gain": -2.7595271672884536}
+{"scene_id": "scene_018", "current": [-3.0, 0.0], "action": -2.0, "score_before": 35.59280490531576, "score_after": 36.55163261547352, "gain": 0.9588277101577631}
+{"scene_id": "scene_018", "current": [-3.0, 0.0], "action": -1.0, "score_before": 35.59280490531576, "score_after": 37.57197474221857, "gain": 1.9791698369028126}
+{"scene_id": "scene_018", "current": [-3.0, 0.0], "action": 1.0, "score_before": 35.59280490531576, "score_after": 36.548445030316095, "gain": 0.9556401250003361}
+{"scene_id": "scene_018", "current": [-3.0, 0.0], "action": 2.0, "score_before": 35.59280490531576, "score_after": 32.745967431977625, "gain": -2.846837473338134}
+{"scene_id": "scene_018", "current": [-3.0, 0.0], "action": 3.0, "score_before": 35.59280490531576, "score_after": 34.56449925005813, "gain": -1.0283056552576326}
+{"scene_id": "scene_018", "current": [-2.0, 0.0], "action": -3.0, "score_before": 37.15188760099193, "score_after": 36.55163261547352, "gain": -0.6002549855184043}
+{"scene_id": "scene_018", "current": [-2.0, 0.0], "action": -1.0, "score_before": 37.15188760099193, "score_after": 38.65358773267057, "gain": 1.5017001316786462}
+{"scene_id": "scene_018", "current": [-2.0, 0.0], "action": 1.0, "score_before": 37.15188760099193, "score_after": 37.19625666082862, "gain": 0.04436905983668993}
+{"scene_id": "scene_018", "current": [-2.0, 0.0], "action": 2.0, "score_before": 37.15188760099193, "score_after": 33.102528925984146, "gain": -4.049358675007781}
+{"scene_id": "scene_018", "current": [-2.0, 0.0], "action": 3.0, "score_before": 37.15188760099193, "score_after": 34.8604731322982, "gain": -2.2914144686937234}
+{"scene_id": "scene_018", "current": [-1.0, 0.0], "action": -3.0, "score_before": 38.34582047513002, "score_after": 37.57197474221857, "gain": -0.7738457329114468}
+{"scene_id": "scene_018", "current": [-1.0, 0.0], "action": -2.0, "score_before": 38.34582047513002, "score_after": 38.65358773267057, "gain": 0.30776725754055434}
+{"scene_id": "scene_018", "current": [-1.0, 0.0], "action": 1.0, "score_before": 38.34582047513002, "score_after": 37.464800269346476, "gain": -0.8810202057835426}
+{"scene_id": "scene_018", "current": [-1.0, 0.0], "action": 2.0, "score_before": 38.34582047513002, "score_after": 33.29472641837805, "gain": -5.051094056751971}
+{"scene_id": "scene_018", "current": [-1.0, 0.0], "action": 3.0, "score_before": 38.34582047513002, "score_after": 34.961697482609786, "gain": -3.3841229925202327}
+{"scene_id": "scene_018", "current": [0.0, 1.0], "action": -3.0, "score_before": 36.147553606866325, "score_after": 36.548445030316095, "gain": 0.4008914234497709}
+{"scene_id": "scene_018", "current": [0.0, 1.0], "action": -2.0, "score_before": 36.147553606866325, "score_after": 37.19625666082862, "gain": 1.0487030539622921}
+{"scene_id": "scene_018", "current": [0.0, 1.0], "action": -1.0, "score_before": 36.147553606866325, "score_after": 37.464800269346476, "gain": 1.3172466624801515}
+{"scene_id": "scene_018", "current": [0.0, 1.0], "action": 2.0, "score_before": 36.147553606866325, "score_after": 32.69592951974276, "gain": -3.4516240871235624}
+{"scene_id": "scene_018", "current": [0.0, 1.0], "action": 3.0, "score_before": 36.147553606866325, "score_after": 33.70662920603036, "gain": -2.440924400835968}
+{"scene_id": "scene_018", "current": [0.0, 2.0], "action": -3.0, "score_before": 31.808736331673508, "score_after": 32.745967431977625, "gain": 0.9372311003041176}
+{"scene_id": "scene_018", "current": [0.0, 2.0], "action": -2.0, "score_before": 31.808736331673508, "score_after": 33.102528925984146, "gain": 1.2937925943106379}
+{"scene_id": "scene_018", "current": [0.0, 2.0], "action": -1.0, "score_before": 31.808736331673508, "score_after": 33.29472641837805, "gain": 1.4859900867045397}
+{"scene_id": "scene_018", "current": [0.0, 2.0], "action": 1.0, "score_before": 31.808736331673508, "score_after": 32.69592951974276, "gain": 0.8871931880692543}
+{"scene_id": "scene_018", "current": [0.0, 2.0], "action": 3.0, "score_before": 31.808736331673508, "score_after": 31.3221533100115, "gain": -0.48658302166200684}
+{"scene_id": "scene_018", "current": [0.0, 3.0], "action": -3.0, "score_before": 33.85217192804331, "score_after": 34.56449925005813, "gain": 0.712327322014815}
+{"scene_id": "scene_018", "current": [0.0, 3.0], "action": -2.0, "score_before": 33.85217192804331, "score_after": 34.8604731322982, "gain": 1.0083012042548916}
+{"scene_id": "scene_018", "current": [0.0, 3.0], "action": -1.0, "score_before": 33.85217192804331, "score_after": 34.961697482609786, "gain": 1.1095255545664742}
+{"scene_id": "scene_018", "current": [0.0, 3.0], "action": 1.0, "score_before": 33.85217192804331, "score_after": 33.70662920603036, "gain": -0.14554272201295504}
+{"scene_id": "scene_018", "current": [0.0, 3.0], "action": 2.0, "score_before": 33.85217192804331, "score_after": 31.3221533100115, "gain": -2.5300186180318107}
+{"scene_id": "scene_019", "current": [0.0], "action": -3.0, "score_before": 36.2655034822048, "score_after": 35.434305492772836, "gain": -0.8311979894319634}
+{"scene_id": "scene_019", "current": [0.0], "action": -2.0, "score_before": 36.2655034822048, "score_after": 36.848280382277565, "gain": 0.5827769000727656}
+{"scene_id": "scene_019", "current": [0.0], "action": -1.0, "score_before": 36.2655034822048, "score_after": 37.879778357458264, "gain": 1.6142748752534644}
+{"scene_id": "scene_019", "current": [0.0], "action": 1.0, "score_before": 36.2655034822048, "score_after": 35.32446012516044, "gain": -0.9410433570443573}
+{"scene_id": "scene_019", "current": [0.0], "action": 2.0, "score_before": 36.2655034822048, "score_after": 30.852263826206602, "gain": -5.413239655998197}
+{"scene_id": "scene_019", "current": [0.0], "action": 3.0, "score_before": 36.2655034822048, "score_after": 32.97925520171142, "gain": -3.286248280493382}
+{"scene_id": "scene_019", "current": [-3.0, 0.0], "action": -2.0, "score_before": 35.434305492772836, "score_after": 36.360913839680215, "gain": 0.9266083469073791}
+{"scene_id": "scene_019", "current": [-3.0, 0.0], "action": -1.0, "score_before": 35.434305492772836, "score_after": 37.215565076502315, "gain": 1.7812595837294793}
+{"scene_id": "scene_019", "current": [-3.0, 0.0], "action": 1.0, "score_before": 35.434305492772836, "score_after": 35.884013166413006, "gain": 0.4497076736401695}
+{"scene_id": "scene_019", "current": [-3.0, 0.0], "action": 2.0, "score_before": 35.434305492772836, "score_after": 31.83504104864335, "gain": -3.599264444129485}
+{"scene_id": "scene_019", "current": [-3.0, 0.0], "action": 3.0, "score_before": 35.434305492772836, "score_after": 33.750026565298775, "gain": -1.684278927474061}
+{"scene_id": "scene_019", "current": [-2.0, 0.0], "action": -3.0, "score_before": 36.848280382277565, "score_after": 36.360913839680215, "gain": -0.4873665425973499}
+{"scene_id": "scene_019", "current": [-2.0, 0.0], "action": -1.0, "score_before": 36.848280382277565, "score_after": 38.3616192576475, "gain": 1.5133388753699322}
+{"scene_id": "scene_019", "current": [-2.0, 0.0], "action": 1.0, "score_before": 36.848280382277565, "score_after": 36.49158241699639, "gain": -0.35669796528117814}
+{"scene_id": "scene_019", "current": [-2.0, 0.0], "action": 2.0, "score_before": 36.848280382277565, "score_after": 32.189228432314664, "gain": -4.659051949962901}
+{"scene_id": "scene_019", "current": [-2.0, 0.0], "action": 3.0, "score_before": 36.848280382277565, "score_after": 34.04981030944947, "gain": -2.7984700728280956}
+{"scene_id": "scene_019", "current": [-1.0, 0.0], "action": -3.0, "score_before": 37.879778357458264, "score_after": 37.215565076502315, "gain": -0.6642132809559484}
+{"scene_id": "scene_019", "current": [-1.0, 0.0], "action": -2.0, "score_before": 37.879778357458264, "score_after": 38.3616192576475, "gain": 0.4818409001892334}
+{"scene_id": "scene_019", "current": [-1.0, 0.0], "action": 1.0, "score_before": 37.879778357458264, "score_after": 36.67913368503138, "gain": -1.2006446724268827}
+{"scene_id": "scene_019", "current": [-1.0, 0.0], "action": 2.0, "score_before": 37.879778357458264, "score_after": 32.35955247273268, "gain": -5.520225884725583}
+{"scene_id": "scene_019", "current": [-1.0, 0.0], "action": 3.0, "score_before": 37.879778357458264, "score_after": 34.12819340005606, "gain": -3.7515849574022013}
+{"scene_id": "scene_019", "current": [0.0, 1.0], "action": -3.0, "score_before": 35.32446012516044, "score_after": 35.884013166413006, "gain": 0.5595530412525633}
+{"scene_id": "scene_019", "current": [0.0, 1.0], "action": -2.0, "score_before": 35.32446012516044, "score_after": 36.49158241699639, "gain": 1.1671222918359447}
+{"scene_id": "scene_019", "current": [0.0, 1.0], "action": -1.0, "score_before": 35.32446012516044, "score_after": 36.67913368503138, "gain": 1.354673559870939}
+{"scene_id": "scene_019", "current": [0.0, 1.0], "action": 2.0, "score_before": 35.32446012516044, "score_after": 31.73929803947013, "gain": -3.585162085690314}
+{"scene_id": "scene_019", "current": [0.0, 1.0], "action": 3.0, "score_before": 35.32446012516044, "score_after": 32.80309250954608, "gain": -2.521367615614359}
+{"scene_id": "scene_019", "current": [0.0, 2.0], "action": -3.0, "score_before": 30.852263826206602, "score_after": 31.83504104864335, "gain": 0.9827772224367486}
+{"scene_id": "scene_019", "current": [0.0, 2.0], "action": -2.0, "score_before": 30.852263826206602, "score_after": 32.189228432314664, "gain": 1.3369646061080616}
+{"scene_id": "scene_019", "current": [0.0, 2.0], "action": -1.0, "score_before": 30.852263826206602, "score_after": 32.35955247273268, "gain": 1.507288646526078}
+{"scene_id": "scene_019", "current": [0.0, 2.0], "action": 1.0, "score_before": 30.852263826206602, "score_after": 31.73929803947013, "gain": 0.8870342132635258}
+{"scene_id": "scene_019", "current": [0.0, 2.0], "action": 3.0, "score_before": 30.852263826206602, "score_after": 30.35152826163024, "gain": -0.5007355645763631}
+{"scene_id": "scene_019", "current": [0.0, 3.0], "action": -3.0, "score_before": 32.97925520171142, "score_after": 33.750026565298775, "gain": 0.7707713635873574}
+{"scene_id": "scene_019", "current": [0.0, 3.0], "action": -2.0, "score_before": 32.97925520171142, "score_after": 34.04981030944947, "gain": 1.070555107738052}
+{"scene_id": "scene_019", "current": [0.0, 3.0], "action": -1.0, "score_before": 32.97925520171142, "score_after": 34.12819340005606, "gain": 1.148938198344645}
+{"scene_id": "scene_019", "current": [0.0, 3.0], "action": 1.0, "score_before": 32.97925520171142, "score_after": 32.80309250954608, "gain": -0.17616269216533453}
+{"scene_id": "scene_019", "current": [0.0, 3.0], "action": 2.0, "score_before": 32.97925520171142, "score_after": 30.35152826163024, "gain": -2.6277269400811782}

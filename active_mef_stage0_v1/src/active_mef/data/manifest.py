@@ -29,6 +29,7 @@ class ManifestExposurePoolDataset:
         candidate_evs: list[float] | None = None,
         simulator: CameraSimulator | None = None,
         limit: int | None = None,
+        max_image_size: int | None = None,
     ) -> None:
         self.manifest_path = Path(manifest_path)
         self.records: list[dict] = []
@@ -43,6 +44,7 @@ class ManifestExposurePoolDataset:
             raise RuntimeError(f"No records in manifest: {self.manifest_path}")
         self.candidate_evs = candidate_evs
         self.simulator = simulator
+        self.max_image_size = max_image_size
 
     def __len__(self) -> int:
         return len(self.records)
@@ -59,17 +61,23 @@ class ManifestExposurePoolDataset:
             exposures: dict[float, np.ndarray] = {}
             for item in rec["exposures"]:
                 ev = float(item["ev"])
-                exposures[ev] = np.clip(read_image(item["path"]), 0.0, 1.0)
-            target = np.clip(read_image(rec["gt"]), 0.0, 1.0)
+                exposures[ev] = np.clip(
+                    read_image(item["path"], max_size=self.max_image_size), 0.0, 1.0
+                )
+            target = np.clip(
+                read_image(rec["gt"], max_size=self.max_image_size), 0.0, 1.0
+            )
             return ExposurePoolSample(scene_id, exposures, target, rec)
 
         if kind == "hdr_pair":
             if self.simulator is None or self.candidate_evs is None:
                 raise ValueError("hdr_pair requires simulator and candidate_evs")
-            hdr = np.maximum(read_image(rec["hdr"]), 0.0)
+            hdr = np.maximum(read_image(rec["hdr"], max_size=self.max_image_size), 0.0)
             hdr_next = None
             if rec.get("hdr_next"):
-                hdr_next = np.maximum(read_image(rec["hdr_next"]), 0.0)
+                hdr_next = np.maximum(
+                    read_image(rec["hdr_next"], max_size=self.max_image_size), 0.0
+                )
             frame_dt = float(rec.get("frame_dt", self.simulator.frame_dt))
             exposures = self.simulator.make_pool(
                 hdr=hdr,

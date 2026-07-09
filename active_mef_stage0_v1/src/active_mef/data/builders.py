@@ -46,11 +46,6 @@ def _ordinal_evs(n: int, step: float = 1.0) -> list[float]:
     return [(i - center) * step for i in range(n)]
 
 
-def _has_duplicate_evs(evs: list[float], decimals: int = 8) -> bool:
-    rounded = [round(float(ev), decimals) for ev in evs]
-    return len(rounded) != len(set(rounded))
-
-
 def build_sequence_pool_manifest(
     input_root: str | Path,
     gt_root: str | Path,
@@ -63,6 +58,7 @@ def build_sequence_pool_manifest(
     out = Path(output_jsonl)
     out.parent.mkdir(parents=True, exist_ok=True)
     records = []
+    skipped = 0
     for seq_dir in sorted([p for p in input_root.iterdir() if p.is_dir()]):
         frames = _image_files(seq_dir)
         if len(frames) < 2:
@@ -73,17 +69,27 @@ def build_sequence_pool_manifest(
             evs = _ordinal_evs(len(frames), step=ordinal_step)
             ev_source = "ordinal"
 
-        if _has_duplicate_evs(evs):
+        # Guard: duplicate EVs would cause silent dict key collisions when the
+        # manifest is loaded into ExposurePoolSample.  Skip scenes where the
+        # sidecar maps two shutters to the same EV (e.g. 1/100 and 1/125 →
+        # both ≈ −0.07 EV after rounding).
+        rounded_evs = [round(e, 6) for e in evs]
+        if len(rounded_evs) != len(set(rounded_evs)):
             warnings.warn(
-                f"Duplicate EVs in scene {seq_dir.name}: {evs}; skipping scene to avoid dict overwrite.",
-                RuntimeWarning,
+                f"Skipping scene {seq_dir.name!r}: duplicate EVs detected "
+                f"({rounded_evs}).  Check exposure.txt ordering or adjust ordinal_step.",
+                stacklevel=2,
             )
+            skipped += 1
             continue
 
         if gt_in_subdir:
             gt_candidates = _image_files(gt_root / seq_dir.name)
         else:
-            gt_candidates = [p for p in gt_root.glob(f"{seq_dir.name}.*") if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
+            gt_candidates = [
+                p for p in gt_root.glob(f"{seq_dir.name}.*")
+                if p.is_file() and p.suffix.lower() in IMAGE_EXTS
+            ]
         if not gt_candidates:
             continue
         rec = {
@@ -91,7 +97,10 @@ def build_sequence_pool_manifest(
             "kind": "precomputed",
             "gt": str(gt_candidates[0].resolve()),
             "ev_source": ev_source,
-            "exposures": [{"ev": float(ev), "path": str(path.resolve())} for ev, path in zip(evs, frames)],
+            "exposures": [
+                {"ev": float(ev), "path": str(path.resolve())}
+                for ev, path in zip(evs, frames)
+            ],
         }
         records.append(rec)
     with out.open("w", encoding="utf-8") as f:

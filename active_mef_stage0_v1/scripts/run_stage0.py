@@ -9,7 +9,6 @@ import random
 import platform
 import sys
 import time
-import zlib
 
 import numpy as np
 import pandas as pd
@@ -55,31 +54,6 @@ def best_fixed_sets(train_ds, backend, metric: str, budgets: list[int], base_req
     return best
 
 
-def resolve_fixed_subset(
-    requested: list[float],
-    available: list[float],
-    base: float,
-    budget: int,
-) -> list[float]:
-    """Resolve a train-selected fixed set on a possibly different test EV pool.
-
-    Exact matches are kept first. Missing slots are filled with unused exposures
-    nearest to the base exposure so the baseline is never silently evaluated
-    with fewer frames than the requested exact budget.
-    """
-    subset = [float(e) for e in requested if float(e) in available]
-    if base not in subset:
-        subset = [float(base)] + subset
-
-    # Remove duplicates while preserving order.
-    subset = list(dict.fromkeys(subset))[:budget]
-    if len(subset) < budget:
-        remaining = [float(e) for e in available if float(e) not in subset]
-        remaining = sorted(remaining, key=lambda e: (abs(e - base), e))
-        subset.extend(remaining[: budget - len(subset)])
-    return subset[:budget]
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", required=True)
@@ -106,8 +80,13 @@ def main():
     candidate_evs = [float(x) for x in cfg["experiment"]["candidate_evs"]]
 
     data_cfg = cfg["dataset"]
+    max_image_size = data_cfg.get("max_image_size", None)
+    if max_image_size is not None:
+        max_image_size = int(max_image_size)
+
     test_ds = ManifestExposurePoolDataset(
-        data_cfg["test_manifest"], candidate_evs, simulator, data_cfg.get("limit_test")
+        data_cfg["test_manifest"], candidate_evs, simulator,
+        data_cfg.get("limit_test"), max_image_size=max_image_size,
     )
     backend = make_backend(cfg["fusion"])
     metric = cfg["experiment"].get("metric", "psnr")
@@ -118,7 +97,8 @@ def main():
     train_manifest = data_cfg.get("train_manifest")
     if train_manifest:
         train_ds = ManifestExposurePoolDataset(
-            train_manifest, candidate_evs, simulator, data_cfg.get("limit_train")
+            train_manifest, candidate_evs, simulator,
+            data_cfg.get("limit_train"), max_image_size=max_image_size,
         )
         fixed_sets.update(best_fixed_sets(
             train_ds, backend, metric, budgets, base_requested, data_cfg.get("fixed_search_scenes")
@@ -148,37 +128,64 @@ def main():
             budget = min(budget, len(sample.evs))
             # Best fixed chosen on train split or configured explicitly.
             if budget in fixed_sets:
-                subset = resolve_fixed_subset(fixed_sets[budget], sample.evs, base, budget)
+                # Keep only EVs that exist in this sample (train/test EV sets
+                # may differ when using a simulator).
+                subset = [e for e in fixed_sets[budget] if e in sample.exposures]
+                if base not in subset:
+                    subset = [base] + subset
+                subset = subset[:budget]
+                # If fewer frames matched than the budget, fill up to budget
+                # with the nearest unused EVs so best_fixed is always evaluated
+                # at the correct budget size.
+                if len(subset) < budget:
+                    unused = sorted(
+                        [e for e in sample.evs if e not in subset],
+                        key=lambda e: abs(e - base),
+                    )
+                    subset = subset + unused[: budget - len(subset)]
             else:
                 # Conservative symmetric fallback around base.
                 ordered = sorted(sample.evs, key=lambda e: (abs(e - base), e))
                 subset = sorted(ordered[:budget])
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "best_fixed", "repeat": None, "score": evaluator.evaluate(subset), "selected": json.dumps(subset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "best_fixed", "score": evaluator.evaluate(subset), "selected": json.dumps(subset)})
 
             hset = rollout_heuristic(sample.exposures, budget, base, heuristic)
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "strong_heuristic", "repeat": None, "score": evaluator.evaluate(hset), "selected": json.dumps(hset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "strong_heuristic", "score": evaluator.evaluate(hset), "selected": json.dumps(hset)})
 
             gset, gscore = evaluator.oracle_greedy(budget, base)
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_greedy", "repeat": None, "score": gscore, "selected": json.dumps(gset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_greedy", "score": gscore, "selected": json.dumps(gset)})
 
             sset, sscore = evaluator.oracle_sequence(budget, base)
-            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_sequence", "repeat": None, "score": sscore, "selected": json.dumps(sset)})
+            rows.append({"scene_id": sample.scene_id, "budget": budget, "method": "oracle_sequence", "score": sscore, "selected": json.dumps(sset)})
             gaps.append({"scene_id": sample.scene_id, "budget": budget, "greedy_score": gscore, "sequence_score": sscore, "gap": sscore - gscore})
             if len(gset) > 1:
                 action_rows.append({"scene_id": sample.scene_id, "budget": budget, "first_oracle_action": gset[1]})
 
-            scene_seed = zlib.crc32(sample.scene_id.encode("utf-8")) & 0xFFFFFFFF
+            random_scores = []
             for r in range(random_repeats):
-                rng = random.Random(seed + 7919 * r + scene_seed)
-                rset = rollout_random(sample.exposures, budget, base, rng)
+                rset = rollout_random(
+                    sample.exposures, budget, base,
+                    random.Random(seed + 7919 * r + hash(sample.scene_id) % 100003),
+                )
+                r_score = evaluator.evaluate(rset)
+                random_scores.append(r_score)
+                # Store each repeat as its own row so downstream analysis can
+                # compute per-repeat variance and do proper paired bootstrap.
                 rows.append({
                     "scene_id": sample.scene_id,
                     "budget": budget,
-                    "method": "random",
-                    "repeat": r,
-                    "score": float(evaluator.evaluate(rset)),
+                    "method": f"random_r{r}",
+                    "score": float(r_score),
                     "selected": json.dumps(rset),
                 })
+            # Also store the mean repeat as "random" for easy summary lookup.
+            rows.append({
+                "scene_id": sample.scene_id,
+                "budget": budget,
+                "method": "random",
+                "score": float(np.mean(random_scores)),
+                "selected": "mean_over_repeats",
+            })
 
     df = pd.DataFrame(rows)
     df.to_csv(out / "per_scene.csv", index=False)
@@ -194,8 +201,10 @@ def main():
             boot.append({"budget": b, "method_a": a, "method_b": c, **stat})
     pd.DataFrame(boot).to_csv(out / "paired_bootstrap.csv", index=False)
 
-    print("\n=== Summary ===")
-    print(summary.to_string(index=False))
+    print("\n=== Summary (main methods) ===")
+    # random_r{i} rows exist for variance analysis but clutter the console.
+    main_methods = {"best_fixed", "strong_heuristic", "oracle_greedy", "oracle_sequence", "random"}
+    print(summary[summary.method.isin(main_methods)].to_string(index=False))
     print(f"\nRaw results: {out.resolve()}")
 
 

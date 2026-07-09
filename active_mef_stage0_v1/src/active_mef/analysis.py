@@ -35,6 +35,8 @@ def paired_bootstrap_delta(
     if len(d) == 0:
         return {"mean": float("nan"), "lo": float("nan"), "hi": float("nan"), "n": 0}
     rng = np.random.default_rng(seed)
+    # Vectorised bootstrap: draw all indices at once instead of a Python loop.
+    # Shape (n_boot, len(d)) — each row is one bootstrap resample.
     idx = rng.integers(0, len(d), size=(n_boot, len(d)))
     means = d[idx].mean(axis=1)
     return {
