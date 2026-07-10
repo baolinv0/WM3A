@@ -1,207 +1,202 @@
-"""Kill Test 2 — value tensor dataset with scene-level split.
-
-Design principle: **never split rows randomly**.  All rows from the same
-scene must land in the same fold, otherwise the predictor can memorise scene
-content and Spearman / regret will be optimistically biased.
-
-Usage
------
-ds = ValueTensorDataset.from_jsonl(
-    tensor_path="results/kill_test_sice/oracle_value_tensor.jsonl",
-    feature_cache="results/kill_test_sice/kt2_features.npz",
-    level="L4",
-)
-X_train, y_train, meta_train = ds.split("train")
-X_val,   y_val,   meta_val   = ds.split("val")
-X_test,  y_test,  meta_test  = ds.split("test")
-"""
+"""Kill Test 2 oracle-label dataset and strict scene-level splitting."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import random
 from pathlib import Path
-from typing import Literal
+from typing import Iterable, Literal, Sequence
 
 import numpy as np
 
+from .features import encode_action, encode_state_evs
 
 Split = Literal["train", "val", "test"]
 
 
-class ValueTensorDataset:
-    """Loads oracle_value_tensor.jsonl and attaches pre-computed features.
+def canonical_state_key(scene_id: str, current: Sequence[float]) -> str:
+    evs = ",".join(f"{float(e):.8g}" for e in sorted(float(x) for x in current))
+    return f"{scene_id}||{evs}"
 
-    Parameters
-    ----------
-    rows : list[dict]
-        Raw rows from the JSONL (scene_id, current, action, gain, …).
-    features : dict[str, np.ndarray]
-        Mapping from string key ``"{scene_id}||{sorted_ev_tuple}"`` to
-        feature vectors produced by run_kt2_features.py.
-    level : "L1" | "L2" | "L4"
-        Which feature level to use as the state representation.
-    action_features : dict[str, np.ndarray]
-        Mapping from same key to action encoding vectors.
-    scene_split : dict[str, Split]
-        Mapping from scene_id to split name.
-    """
 
-    def __init__(
-        self,
-        rows: list[dict],
-        features: dict[str, np.ndarray],
-        level: str,
-        action_features: dict[str, np.ndarray],
-        scene_split: dict[str, Split],
-    ) -> None:
-        self.rows = rows
-        self.features = features
-        self.level = level
-        self.action_features = action_features
-        self.scene_split = scene_split
+def load_tensor_rows(path: str | Path) -> list[dict]:
+    rows: list[dict] = []
+    with Path(path).open("r", encoding="utf-8") as handle:
+        for line_no, line in enumerate(handle, 1):
+            line = line.strip()
+            if not line:
+                continue
+            row = json.loads(line)
+            required = {"scene_id", "current", "action", "gain", "score_before", "score_after"}
+            missing = required - set(row)
+            if missing:
+                raise ValueError(f"{path}:{line_no} missing fields: {sorted(missing)}")
+            row["scene_id"] = str(row["scene_id"])
+            row["current"] = sorted(float(x) for x in row["current"])
+            row["action"] = float(row["action"])
+            row["gain"] = float(row["gain"])
+            row["score_before"] = float(row["score_before"])
+            row["score_after"] = float(row["score_after"])
+            rows.append(row)
+    if not rows:
+        raise RuntimeError(f"no rows loaded from {path}")
+    return rows
 
-    # ------------------------------------------------------------------ #
-    # Factory                                                              #
-    # ------------------------------------------------------------------ #
+
+def make_scene_split(
+    scene_ids: Iterable[str],
+    train_frac: float = 2.0 / 3.0,
+    val_frac: float = 1.0 / 6.0,
+    seed: int = 42,
+) -> dict[str, Split]:
+    scenes = sorted(set(str(x) for x in scene_ids))
+    if len(scenes) < 3:
+        raise ValueError("at least 3 scenes are required for train/val/test splitting")
+    if not (0.0 < train_frac < 1.0 and 0.0 < val_frac < 1.0 and train_frac + val_frac < 1.0):
+        raise ValueError("invalid split fractions")
+    rng = random.Random(seed)
+    rng.shuffle(scenes)
+    n = len(scenes)
+    n_train = max(1, int(round(n * train_frac)))
+    n_val = max(1, int(round(n * val_frac)))
+    if n_train + n_val >= n:
+        n_val = max(1, n - n_train - 1)
+    split: dict[str, Split] = {}
+    for idx, scene in enumerate(scenes):
+        if idx < n_train:
+            split[scene] = "train"
+        elif idx < n_train + n_val:
+            split[scene] = "val"
+        else:
+            split[scene] = "test"
+    if set(split.values()) != {"train", "val", "test"}:
+        raise RuntimeError("scene split failed to create all three partitions")
+    return split
+
+
+def save_scene_split(path: str | Path, split: dict[str, Split]) -> None:
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8") as handle:
+        json.dump(split, handle, indent=2, sort_keys=True)
+
+
+def load_scene_split(path: str | Path) -> dict[str, Split]:
+    with Path(path).open("r", encoding="utf-8") as handle:
+        raw = json.load(handle)
+    result: dict[str, Split] = {}
+    for key, value in raw.items():
+        if value not in {"train", "val", "test"}:
+            raise ValueError(f"invalid split value for {key}: {value}")
+        result[str(key)] = value
+    return result
+
+
+@dataclass
+class FeatureCache:
+    state_keys: np.ndarray
+    l1: np.ndarray
+    l2: np.ndarray
+    l4: np.ndarray
+    encoder_name: str
 
     @classmethod
-    def from_jsonl(
+    def load(cls, path: str | Path) -> "FeatureCache":
+        data = np.load(Path(path), allow_pickle=False)
+        required = {"state_keys", "l1", "l2", "l4", "encoder_name"}
+        missing = required - set(data.files)
+        if missing:
+            raise ValueError(f"feature cache missing arrays: {sorted(missing)}")
+        state_keys = data["state_keys"].astype(str)
+        l1 = data["l1"].astype(np.float32)
+        l2 = data["l2"].astype(np.float32)
+        l4 = data["l4"].astype(np.float32)
+        if not (len(state_keys) == len(l1) == len(l2) == len(l4)):
+            raise ValueError("feature cache arrays have inconsistent lengths")
+        return cls(state_keys, l1, l2, l4, str(data["encoder_name"].item()))
+
+    def matrix(self, level: str) -> np.ndarray:
+        name = level.upper()
+        if name == "L1":
+            return self.l1
+        if name == "L2":
+            return self.l2
+        if name == "L4":
+            return self.l4
+        raise ValueError(f"unknown level {level}; expected L1/L2/L4")
+
+    def index(self) -> dict[str, int]:
+        return {str(key): idx for idx, key in enumerate(self.state_keys.tolist())}
+
+
+@dataclass
+class ValueTensorDataset:
+    rows: list[dict]
+    cache: FeatureCache
+    scene_split: dict[str, Split]
+    max_abs_ev: float
+
+    @classmethod
+    def create(
         cls,
         tensor_path: str | Path,
-        feature_cache: str | Path,
-        level: str = "L4",
-        train_frac: float = 0.70,
-        val_frac:   float = 0.15,
+        cache_path: str | Path,
+        split_path: str | Path | None = None,
+        train_frac: float = 2.0 / 3.0,
+        val_frac: float = 1.0 / 6.0,
         seed: int = 42,
     ) -> "ValueTensorDataset":
-        """Load dataset from JSONL tensor + pre-computed feature cache.
-
-        The feature cache is an .npz file produced by run_kt2_features.py.
-        It stores arrays keyed by ``"L1/{key}"``, ``"L2/{key}"``, ``"L4/{key}"``
-        and ``"act/{key}"``, where ``key = scene_id + "||" + ev_tuple_str``.
-        """
-        # Load tensor rows
-        rows = []
-        with Path(tensor_path).open("r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    rows.append(json.loads(line))
-
-        # Load feature cache
-        cache = np.load(Path(feature_cache), allow_pickle=True)
-
-        def _lookup(prefix: str, scene_id: str, current: list[float]) -> np.ndarray | None:
-            key = f"{prefix}/{scene_id}||{_ev_key(current)}"
-            return cache[key] if key in cache else None
-
-        # Build feature dicts (keyed by canonical string)
-        features:        dict[str, np.ndarray] = {}
-        action_features: dict[str, np.ndarray] = {}
+        rows = load_tensor_rows(tensor_path)
+        cache = FeatureCache.load(cache_path)
+        scenes = {str(row["scene_id"]) for row in rows}
+        if split_path is not None and Path(split_path).exists():
+            split = load_scene_split(split_path)
+            missing = scenes - set(split)
+            if missing:
+                raise ValueError(f"split file missing {len(missing)} scenes")
+        else:
+            split = make_scene_split(scenes, train_frac, val_frac, seed)
+            if split_path is not None:
+                save_scene_split(split_path, split)
+        all_evs = [abs(float(row["action"])) for row in rows]
         for row in rows:
-            sid     = row["scene_id"]
-            current = row["current"]
-            action  = row["action"]
-            k_state  = _state_key(sid, current)
-            k_action = _action_key(sid, current, action)
+            all_evs.extend(abs(float(x)) for x in row["current"])
+        max_abs_ev = max(max(all_evs, default=1.0), 1.0)
+        return cls(rows, cache, split, max_abs_ev)
 
-            if k_state not in features:
-                feat = _lookup(level, sid, current)
-                if feat is not None:
-                    features[k_state] = feat
-
-            if k_action not in action_features:
-                act_feat = _lookup("act", sid, current)
-                if act_feat is not None:
-                    # action_features cache stores a dict per state; index by action
-                    # (stored as structured array or separate per action)
-                    pass   # handled via full_action_key below
-
-        # Reload: action features stored as "act__{scene}||{ev_tuple}||{action}"
-        action_features2: dict[str, np.ndarray] = {}
-        for key in cache.files:
-            if key.startswith("act__"):
-                action_features2[key[5:]] = cache[key]   # strip "act__"
-
-        # Scene-level split
-        all_scenes = sorted({r["scene_id"] for r in rows})
-        rng = random.Random(seed)
-        rng.shuffle(all_scenes)
-        n = len(all_scenes)
-        n_train = int(n * train_frac)
-        n_val   = int(n * val_frac)
-        scene_split: dict[str, Split] = {}
-        for i, sid in enumerate(all_scenes):
-            if i < n_train:
-                scene_split[sid] = "train"
-            elif i < n_train + n_val:
-                scene_split[sid] = "val"
-            else:
-                scene_split[sid] = "test"
-
-        return cls(rows, features, level, action_features2, scene_split)
-
-    # ------------------------------------------------------------------ #
-    # Split accessor                                                       #
-    # ------------------------------------------------------------------ #
-
-    def split(
-        self, split_name: Split
-    ) -> tuple[np.ndarray, np.ndarray, list[dict]]:
-        """Return (X, y, meta) for the requested split.
-
-        X shape: (n_samples, state_dim + act_dim)
-        y shape: (n_samples,)   — ΔQ gain values
-        meta:    list of dicts with scene_id, current, action keys
-        """
-        X_parts, y_parts, meta = [], [], []
+    def arrays(self, level: str, split_name: Split) -> tuple[np.ndarray, np.ndarray, list[dict]]:
+        feature_matrix = self.cache.matrix(level)
+        key_to_idx = self.cache.index()
+        x_parts: list[np.ndarray] = []
+        y: list[float] = []
+        meta: list[dict] = []
         for row in self.rows:
-            sid     = row["scene_id"]
-            if self.scene_split.get(sid) != split_name:
+            scene = str(row["scene_id"])
+            if self.scene_split.get(scene) != split_name:
                 continue
-            current = row["current"]
-            action  = row["action"]
+            key = canonical_state_key(scene, row["current"])
+            idx = key_to_idx.get(key)
+            if idx is None:
+                raise KeyError(f"feature cache missing state {key}")
+            state_feature = feature_matrix[idx]
+            state_meta = encode_state_evs(row["current"], self.max_abs_ev)
+            action = encode_action(row["action"], row["current"], self.max_abs_ev)
+            x_parts.append(np.concatenate([state_feature, state_meta, action]).astype(np.float32))
+            y.append(float(row["gain"]))
+            meta.append({
+                "scene_id": scene,
+                "current": list(row["current"]),
+                "state_key": key,
+                "action": float(row["action"]),
+                "score_before": float(row["score_before"]),
+                "score_after": float(row["score_after"]),
+            })
+        if not x_parts:
+            raise RuntimeError(f"no samples for split={split_name}")
+        return np.stack(x_parts), np.asarray(y, dtype=np.float32), meta
 
-            state_key  = _state_key(sid, current)
-            action_key = _full_action_key(sid, current, action)
-
-            state_feat  = self.features.get(state_key)
-            action_feat = self.action_features.get(action_key)
-
-            if state_feat is None or action_feat is None:
-                continue   # feature cache miss — skip
-
-            X_parts.append(np.concatenate([state_feat, action_feat]))
-            y_parts.append(float(row["gain"]))
-            meta.append({"scene_id": sid, "current": current, "action": float(action)})
-
-        if not X_parts:
-            return np.zeros((0, 1), dtype=np.float32), np.zeros(0), []
-        return (
-            np.stack(X_parts).astype(np.float32),
-            np.array(y_parts, dtype=np.float32),
-            meta,
-        )
-
-    def n_scenes(self, split_name: Split) -> int:
-        return sum(1 for v in self.scene_split.values() if v == split_name)
-
-
-# ------------------------------------------------------------------ #
-# Key helpers                                                          #
-# ------------------------------------------------------------------ #
-
-def _ev_key(evs: list[float]) -> str:
-    return "_".join(f"{e:.1f}" for e in sorted(evs))
-
-
-def _state_key(scene_id: str, current: list[float]) -> str:
-    return f"{scene_id}||{_ev_key(current)}"
-
-
-def _action_key(scene_id: str, current: list[float], action: float) -> str:
-    return f"{scene_id}||{_ev_key(current)}||{action:.1f}"
-
-
-def _full_action_key(scene_id: str, current: list[float], action: float) -> str:
-    return _action_key(scene_id, current, action)
+    def scene_counts(self) -> dict[str, int]:
+        return {
+            split: sum(1 for value in self.scene_split.values() if value == split)
+            for split in ("train", "val", "test")
+        }
