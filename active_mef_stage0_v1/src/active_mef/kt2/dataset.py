@@ -37,6 +37,11 @@ def load_tensor_rows(path: str | Path) -> list[dict]:
             row["gain"] = float(row["gain"])
             row["score_before"] = float(row["score_before"])
             row["score_after"] = float(row["score_after"])
+            numeric = [row["action"], row["gain"], row["score_before"], row["score_after"], *row["current"]]
+            if not np.isfinite(np.asarray(numeric, dtype=np.float64)).all():
+                raise ValueError(f"{path}:{line_no} contains non-finite numeric values")
+            if row["action"] in row["current"]:
+                raise ValueError(f"{path}:{line_no} action already present in current state")
             rows.append(row)
     if not rows:
         raise RuntimeError(f"no rows loaded from {path}")
@@ -102,18 +107,26 @@ class FeatureCache:
 
     @classmethod
     def load(cls, path: str | Path) -> "FeatureCache":
-        data = np.load(Path(path), allow_pickle=False)
-        required = {"state_keys", "l1", "l2", "l4", "encoder_name"}
-        missing = required - set(data.files)
-        if missing:
-            raise ValueError(f"feature cache missing arrays: {sorted(missing)}")
-        state_keys = data["state_keys"].astype(str)
-        l1 = data["l1"].astype(np.float32)
-        l2 = data["l2"].astype(np.float32)
-        l4 = data["l4"].astype(np.float32)
+        with np.load(Path(path), allow_pickle=False) as data:
+            required = {"state_keys", "l1", "l2", "l4", "encoder_name"}
+            missing = required - set(data.files)
+            if missing:
+                raise ValueError(f"feature cache missing arrays: {sorted(missing)}")
+            state_keys = data["state_keys"].astype(str)
+            l1 = data["l1"].astype(np.float32)
+            l2 = data["l2"].astype(np.float32)
+            l4 = data["l4"].astype(np.float32)
+            encoder_name = str(data["encoder_name"].item())
         if not (len(state_keys) == len(l1) == len(l2) == len(l4)):
             raise ValueError("feature cache arrays have inconsistent lengths")
-        return cls(state_keys, l1, l2, l4, str(data["encoder_name"].item()))
+        if len(state_keys) != len(set(state_keys.tolist())):
+            raise ValueError("feature cache contains duplicate state keys")
+        for name, matrix in (("L1", l1), ("L2", l2), ("L4", l4)):
+            if matrix.ndim != 2:
+                raise ValueError(f"{name} feature matrix must be 2D, got {matrix.shape}")
+            if not np.isfinite(matrix).all():
+                raise ValueError(f"{name} feature matrix contains non-finite values")
+        return cls(state_keys, l1, l2, l4, encoder_name)
 
     def matrix(self, level: str) -> np.ndarray:
         name = level.upper()
@@ -154,6 +167,9 @@ class ValueTensorDataset:
             missing = scenes - set(split)
             if missing:
                 raise ValueError(f"split file missing {len(missing)} scenes")
+            extra = set(split) - scenes
+            if extra:
+                raise ValueError(f"split file contains {len(extra)} scenes absent from tensor")
         else:
             split = make_scene_split(scenes, train_frac, val_frac, seed)
             if split_path is not None:
@@ -193,7 +209,11 @@ class ValueTensorDataset:
             })
         if not x_parts:
             raise RuntimeError(f"no samples for split={split_name}")
-        return np.stack(x_parts), np.asarray(y, dtype=np.float32), meta
+        x_array = np.stack(x_parts).astype(np.float32)
+        y_array = np.asarray(y, dtype=np.float32)
+        if not np.isfinite(x_array).all() or not np.isfinite(y_array).all():
+            raise FloatingPointError(f"non-finite data found in split={split_name}, level={level}")
+        return x_array, y_array, meta
 
     def scene_counts(self) -> dict[str, int]:
         return {
