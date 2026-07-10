@@ -7,3 +7,5 @@ SICE*/
 *.pth
 *.pt
 *.ckpt
+results/*/kt2_features*.npz
+outputs/
