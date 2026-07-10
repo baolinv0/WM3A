@@ -71,7 +71,7 @@ def rollout_policy(
             if final_score is None:
                 raise RuntimeError("rollout failed to produce a score")
             rows.append({
-                "scene_id": scene,
+                "scene_id": str(scene),
                 "budget": int(budget),
                 "level": level,
                 "policy_score": final_score,
@@ -93,8 +93,18 @@ def headroom_recovery(
     missing = required - set(per_scene_results.columns)
     if missing:
         raise ValueError(f"per_scene results missing columns: {sorted(missing)}")
-    base = per_scene_results[per_scene_results.method == baseline_method][["scene_id", "budget", "score"]].rename(columns={"score": "baseline_score"})
-    oracle = per_scene_results[per_scene_results.method == oracle_method][["scene_id", "budget", "score"]].rename(columns={"score": "oracle_score"})
+
+    # CSV readers often infer numeric-looking SICE scene IDs as integers. Cast
+    # both sides explicitly so rollout/object IDs join deterministically.
+    rollout = rollout.copy()
+    scores = per_scene_results.copy()
+    rollout["scene_id"] = rollout["scene_id"].astype(str)
+    scores["scene_id"] = scores["scene_id"].astype(str)
+    rollout["budget"] = rollout["budget"].astype(int)
+    scores["budget"] = scores["budget"].astype(int)
+
+    base = scores[scores.method == baseline_method][["scene_id", "budget", "score"]].rename(columns={"score": "baseline_score"})
+    oracle = scores[scores.method == oracle_method][["scene_id", "budget", "score"]].rename(columns={"score": "oracle_score"})
     merged = rollout.merge(base, on=["scene_id", "budget"]).merge(oracle, on=["scene_id", "budget"])
     if merged.empty:
         raise RuntimeError("rollout did not match baseline/oracle result rows")
