@@ -1,0 +1,32 @@
+seed: 42
+device: cuda
+
+levels: [L1, L2, L4]
+
+data:
+  tensor: results/kill_test_sice/oracle_value_tensor.jsonl
+  feature_cache: results/kill_test_sice/kt2_features_resnet18.npz
+
+split:
+  # 210 scenes -> approximately 140 / 35 / 35
+  train_frac: 0.6666666667
+  val_frac: 0.1666666667
+
+training:
+  hidden_dims: [256, 128]
+  dropout: 0.1
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 512
+  max_epochs: 120
+  patience: 15
+
+evaluation:
+  bootstrap_repeats: 5000
+
+rollout:
+  budgets: [2, 3, 4]
+  base_ev: 0.0
+  per_scene_results: results/kill_test_sice/per_scene.csv
+  baseline_method: best_fixed
+  oracle_method: oracle_greedy
