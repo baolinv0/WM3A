@@ -42,6 +42,12 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def _require_finite(name: str, array: np.ndarray) -> None:
+    if not np.isfinite(array).all():
+        count = int((~np.isfinite(array)).sum())
+        raise FloatingPointError(f"{name} contains {count} non-finite values")
+
+
 def main() -> None:
     args = parse_args()
     rows = load_tensor_rows(args.tensor)
@@ -65,7 +71,12 @@ def main() -> None:
         limit=None,
         max_image_size=max_image_size,
     )
-    scene_to_index = {str(record.get("scene_id", idx)): idx for idx, record in enumerate(dataset.records)}
+    scene_to_index: dict[str, int] = {}
+    for idx, record in enumerate(dataset.records):
+        scene_id = str(record.get("scene_id", idx))
+        if scene_id in scene_to_index:
+            raise ValueError(f"duplicate scene_id in manifest: {scene_id}")
+        scene_to_index[scene_id] = idx
     missing_scenes = set(states_by_scene) - set(scene_to_index)
     if missing_scenes:
         preview = sorted(missing_scenes)[:5]
@@ -86,7 +97,7 @@ def main() -> None:
             weights_path=args.resnet_weights,
         )
         l4_encoder = FrozenResNet18Encoder(
-            6,
+            9,
             device=args.device,
             weights=args.weights_mode,
             weights_path=args.resnet_weights,
@@ -143,6 +154,9 @@ def main() -> None:
     l4 = np.stack(all_l4).astype(np.float32)
     if not (len(state_keys) == len(l1) == len(l2) == len(l4)):
         raise RuntimeError("feature cache arrays have inconsistent lengths")
+    _require_finite("L1 features", l1)
+    _require_finite("L2 features", l2)
+    _require_finite("L4 features", l4)
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
