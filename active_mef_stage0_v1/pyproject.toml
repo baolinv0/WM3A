@@ -17,5 +17,12 @@ dependencies = [
   "tqdm>=4.66",
 ]
 
+[project.optional-dependencies]
+kt2 = [
+  "torch>=2.2",
+  "torchvision>=0.17",
+  "scipy>=1.10",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
