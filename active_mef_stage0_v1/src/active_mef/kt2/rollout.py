@@ -88,7 +88,12 @@ def headroom_recovery(
     oracle_method: str = "oracle_greedy",
     denominator_eps: float = 1e-6,
 ) -> pd.DataFrame:
-    """Compute global oracle-headroom recovery eta for each level and budget."""
+    """Compute global oracle-headroom recovery eta for each level and budget.
+
+    Global eta uses the aggregate mean headroom. Per-scene median eta is reported
+    only for scenes with strictly positive oracle headroom, because zero/negative
+    denominators do not represent recoverable opportunity.
+    """
     required = {"scene_id", "budget", "method", "score"}
     missing = required - set(per_scene_results.columns)
     if missing:
@@ -113,9 +118,9 @@ def headroom_recovery(
     for (level, budget), group in merged.groupby(["level", "budget"]):
         denom = float(group.oracle_score.mean() - group.baseline_score.mean())
         numer = float(group.policy_score.mean() - group.baseline_score.mean())
-        eta = numer / denom if abs(denom) > denominator_eps else float("nan")
+        eta = numer / denom if denom > denominator_eps else float("nan")
         scene_denom = group.oracle_score - group.baseline_score
-        valid = scene_denom.abs() > denominator_eps
+        valid = scene_denom > denominator_eps
         scene_eta = (group.loc[valid, "policy_score"] - group.loc[valid, "baseline_score"]) / scene_denom[valid]
         records.append({
             "level": level,
@@ -124,7 +129,8 @@ def headroom_recovery(
             "mean_baseline_score": float(group.baseline_score.mean()),
             "mean_oracle_score": float(group.oracle_score.mean()),
             "eta_global": float(eta),
-            "eta_scene_median": float(scene_eta.median()) if len(scene_eta) else float("nan"),
+            "eta_scene_median_positive_headroom": float(scene_eta.median()) if len(scene_eta) else float("nan"),
+            "positive_headroom_scenes": int(valid.sum()),
             "num_scenes": int(len(group)),
         })
     return pd.DataFrame(records)
