@@ -16,13 +16,20 @@ class Standardizer:
 
     @classmethod
     def fit(cls, x: np.ndarray) -> "Standardizer":
+        if x.ndim != 2 or len(x) == 0:
+            raise ValueError(f"x must be a non-empty 2D matrix, got {x.shape}")
+        if not np.isfinite(x).all():
+            raise FloatingPointError("x contains non-finite values")
         mean = x.mean(axis=0).astype(np.float32)
         std = x.std(axis=0).astype(np.float32)
         std[std < 1e-6] = 1.0
         return cls(mean, std)
 
     def transform(self, x: np.ndarray) -> np.ndarray:
-        return ((x - self.mean) / self.std).astype(np.float32)
+        transformed = ((x - self.mean) / self.std).astype(np.float32)
+        if not np.isfinite(transformed).all():
+            raise FloatingPointError("standardized features contain non-finite values")
+        return transformed
 
 
 class ScalarMLP:
@@ -50,6 +57,15 @@ def _set_seed(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
+def _validate_xy(name: str, x: np.ndarray, y: np.ndarray) -> None:
+    if x.ndim != 2 or y.ndim != 1:
+        raise ValueError(f"{name}: expected x=2D/y=1D, got x={x.shape}, y={y.shape}")
+    if len(x) != len(y) or len(x) == 0:
+        raise ValueError(f"{name}: inconsistent or empty sample counts x={len(x)}, y={len(y)}")
+    if not np.isfinite(x).all() or not np.isfinite(y).all():
+        raise FloatingPointError(f"{name}: non-finite feature or target values")
+
+
 def train_scalar_mlp(
     x_train: np.ndarray,
     y_train: np.ndarray,
@@ -68,6 +84,13 @@ def train_scalar_mlp(
 ) -> dict:
     import torch
     from torch.utils.data import DataLoader, TensorDataset
+
+    _validate_xy("train", x_train, y_train)
+    _validate_xy("val", x_val, y_val)
+    if x_train.shape[1] != x_val.shape[1]:
+        raise ValueError("train/val feature dimensions differ")
+    if batch_size <= 0 or max_epochs <= 0 or patience <= 0:
+        raise ValueError("batch_size, max_epochs, and patience must be positive")
 
     _set_seed(seed)
     selected_device = device if not device.startswith("cuda") or torch.cuda.is_available() else "cpu"
@@ -109,12 +132,16 @@ def train_scalar_mlp(
             optimizer.zero_grad(set_to_none=True)
             pred = model(xb)
             loss = loss_fn(pred, yb)
+            if not torch.isfinite(loss):
+                raise FloatingPointError(f"non-finite training loss at epoch {epoch}")
             loss.backward()
             optimizer.step()
             train_losses.append(float(loss.detach().cpu()))
         model.eval()
         with torch.inference_mode():
             val_loss = float(loss_fn(model(x_val_t), y_val_t).detach().cpu())
+        if not np.isfinite(val_loss):
+            raise FloatingPointError(f"non-finite validation loss at epoch {epoch}")
         history.append({"epoch": epoch, "train_loss": float(np.mean(train_losses)), "val_loss": val_loss})
         if val_loss < best_val - 1e-6:
             best_val = val_loss
@@ -144,6 +171,8 @@ def train_scalar_mlp(
 def predict(bundle: dict, x: np.ndarray, batch_size: int = 4096) -> np.ndarray:
     import torch
 
+    if x.ndim != 2:
+        raise ValueError(f"prediction features must be 2D, got {x.shape}")
     model = bundle["model"]
     dev = next(model.parameters()).device
     x_s = bundle["x_scaler"].transform(x)
@@ -154,7 +183,10 @@ def predict(bundle: dict, x: np.ndarray, batch_size: int = 4096) -> np.ndarray:
             pred = model(xb).squeeze(1).detach().cpu().numpy()
         outputs.append(pred.astype(np.float32))
     pred_s = np.concatenate(outputs) if outputs else np.zeros(0, dtype=np.float32)
-    return pred_s * float(bundle["y_std"]) + float(bundle["y_mean"])
+    result = pred_s * float(bundle["y_std"]) + float(bundle["y_mean"])
+    if not np.isfinite(result).all():
+        raise FloatingPointError("predictor produced non-finite outputs")
+    return result
 
 
 def save_bundle(path: str | Path, bundle: dict, level: str) -> None:
