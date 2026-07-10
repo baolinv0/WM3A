@@ -2,7 +2,8 @@
 
 L1: global exposure statistics, intentionally no spatial layout.
 L2: frozen feature of the current fused output Y_t.
-L4: frozen feature of a strict superset of Y_t: [Y_t, confidence, under, over].
+L4: frozen feature of a strict superset of Y_t with explicit LinearRadiance
+    accumulation state: [Y_t, compressed S, W, under, over].
 
 The production path uses ImageNet-pretrained ResNet-18 for L2/L4. A deterministic
 ``grid_stats`` path is provided only for CPU smoke tests and fast pipeline checks.
@@ -112,12 +113,16 @@ def _grid_stats(img: np.ndarray, rows: int = GRID_ROWS, cols: int = GRID_COLS) -
 
 
 def state_to_map(fused: np.ndarray, state: dict[str, np.ndarray]) -> np.ndarray:
-    """Build the L4 six-channel map [Y_t RGB, confidence, under, over].
+    """Build the L4 nine-channel map [Y_t RGB, S RGB, W, under, over].
 
-    The first three channels are exactly the fused output used by L2. Therefore
-    L4 is a strict information superset of L2 under the same fusion backend.
+    The first three channels are exactly the fused output used by L2. The next
+    three are a fixed log-compression of the weighted radiance accumulator S;
+    W is normalized by the maximum context size. Therefore L4 contains the
+    current output plus explicit backend-native accumulation information, while
+    still using no candidate/future frame.
     """
     fused = np.clip(np.asarray(fused, dtype=np.float32), 0.0, 1.0)
+    s = np.asarray(state["S"], dtype=np.float32)
     w = np.asarray(state["W"], dtype=np.float32)
     under = np.asarray(state["cov_under"], dtype=np.float32)
     over = np.asarray(state["cov_over"], dtype=np.float32)
@@ -127,18 +132,22 @@ def state_to_map(fused: np.ndarray, state: dict[str, np.ndarray]) -> np.ndarray:
         under = under[..., None]
     if over.ndim == 2:
         over = over[..., None]
-    if fused.shape[:2] != w.shape[:2] or fused.shape[:2] != under.shape[:2] or fused.shape[:2] != over.shape[:2]:
+    if s.ndim != 3 or s.shape[2] != 3:
+        raise ValueError(f"state S must be HWC RGB, got {s.shape}")
+    if fused.shape[:2] != s.shape[:2] or fused.shape[:2] != w.shape[:2] or fused.shape[:2] != under.shape[:2] or fused.shape[:2] != over.shape[:2]:
         raise ValueError("fused/state maps must share spatial shape")
 
-    conf = np.log1p(np.maximum(w, 0.0))
-    denom = float(conf.max())
-    if denom > 1e-8:
-        conf = conf / denom
-    else:
-        conf = np.zeros_like(conf)
+    # LinearRadiance's S is a weighted radiance sum. A fixed monotonic log
+    # compression preserves absolute scene/state differences better than per-state
+    # max normalization. 64 is above the expected SICE range for up to 4 frames
+    # and EV ranks in [-3,3]; clipping only protects pathological inputs.
+    s_comp = np.log1p(np.maximum(s, 0.0)) / np.log1p(64.0)
+    s_comp = np.clip(s_comp, 0.0, 1.0)
+    confidence = np.clip(np.maximum(w, 0.0) / float(MAX_CONTEXT), 0.0, 1.0)
     return np.concatenate([
         fused,
-        np.clip(conf, 0.0, 1.0),
+        s_comp,
+        confidence,
         np.clip(under, 0.0, 1.0),
         np.clip(over, 0.0, 1.0),
     ], axis=2).astype(np.float32)
