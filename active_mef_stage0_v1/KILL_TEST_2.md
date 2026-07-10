@@ -2,15 +2,17 @@
 
 This stage tests one question only:
 
-> Does the fusion accumulation state contain candidate-value information beyond the current fused output?
+> Does the LinearRadiance accumulation-aware state contain candidate-value information beyond the current fused output?
 
 The minimum comparison is:
 
 - **L1** — global exposure statistics + EV metadata
 - **L2** — frozen feature of the current fused output `Y_t`
-- **L4** — frozen feature of `[Y_t, confidence, under-exposure map, over-exposure map]`
+- **L4** — frozen feature of `[Y_t, compressed S, W, under-exposure map, over-exposure map]`
 
 All three predictors receive identical state EV metadata and candidate-action features. The default split is scene-level only: approximately **140 / 35 / 35** scenes for the 210-scene SICE experiment.
+
+L4 is deliberately a strict information superset of L2: its first three channels are exactly the L2 fused output, followed by explicit LinearRadiance accumulation variables. This experiment does **not** claim to validate the FreeMEF hidden state; that learned-backbone validation is deferred until the cheap structural gate passes.
 
 ## 1. Install
 
@@ -42,7 +44,7 @@ python scripts/build_killtest2_cache.py \
   --batch-size 32
 ```
 
-The Stage-0 config used here **must define the same LinearRadiance fusion backend that generated the oracle value tensor**. If the existing SICE config points to a different fusion backend, create a matching config before building the cache.
+Despite its historical filename, the current `stage0_sice_mertens.yaml` config uses `fusion.type: linear_radiance`. The Stage-0 config supplied here must define the same backend and parameters that generated the oracle value tensor.
 
 For a fast CPU pipeline smoke test only:
 
@@ -50,17 +52,17 @@ For a fast CPU pipeline smoke test only:
 python scripts/build_killtest2_cache.py \
   --tensor results/kill_test_sice/oracle_value_tensor.jsonl \
   --manifest data/manifests/sice_test.jsonl \
-  --stage0-config <matching-linear-stage0-config.yaml> \
+  --stage0-config configs/stage0_sice_mertens.yaml \
   --output results/kill_test_sice/kt2_features_grid.npz \
   --encoder grid_stats \
   --device cpu
 ```
 
-`grid_stats` is not the primary paper baseline; it exists for debugging and fast pipeline verification.
+`grid_stats` is not the primary representation comparison; it exists for debugging and fast pipeline verification.
 
 ## 3. Train the three scalar predictors
 
-Update `configs/killtest2_sice.yaml` so `data.feature_cache` points to the cache produced above, then run:
+`configs/killtest2_sice.yaml` already points to the production ResNet-18 feature cache path. Run:
 
 ```bash
 python scripts/run_killtest2.py \
@@ -118,7 +120,7 @@ Global headroom recovery is:
 \eta = \frac{Q_{policy}-Q_{fixed}}{Q_{oracle}-Q_{fixed}}.
 \]
 
-The rollout uses only states already represented in `oracle_value_tensor.jsonl`. With a maximum budget of 4, the tensor must contain current subsets up to size 3.
+The rollout uses only states already represented in `oracle_value_tensor.jsonl`. With a maximum budget of 4, the tensor must contain current subsets up to size 3. The current SICE tensor/config should therefore use `value_tensor_max_subset_size: 2`, because `current` always includes the base exposure and two additional exposures gives a context size of three.
 
 ## 5. Kill Test interpretation
 
@@ -134,9 +136,9 @@ where the comparison is made on held-out scenes with Decision Regret as the prim
 
 Suggested internal interpretation:
 
-- `L4 ≈ L2`: fusion-native state has no demonstrated unique value; stop or reframe.
-- `L4 < L2`: state representation is actively worse; diagnose before any method expansion.
-- `L4 > L2`, but tiny bootstrap interval overlapping zero: promising but not decisive.
+- `L4 ≈ L2`: the current accumulation-aware state has no demonstrated unique value; stop or reframe.
+- `L4 < L2`: the state representation is actively worse; diagnose before any method expansion.
+- `L4 > L2`, but the scene-bootstrap interval overlaps zero: promising but not decisive.
 - `L4 > L2` with meaningful scene-level regret reduction and stable ranking gain: proceed to Stage 1.
 
 Only after this gate passes should the project add heavier experiments such as generic exposure-set encoders, FreeMEF-conditioned label enumeration, or dense spatial complementarity prediction.
@@ -144,8 +146,9 @@ Only after this gate passes should the project add heavier experiments such as g
 ## 6. Leakage and fairness constraints
 
 - Split by `scene_id`, never by individual state-action rows.
-- L1/L2/L4 use the same scene split, candidate actions, state EV metadata, MLP capacity, optimizer, and training schedule.
+- L1/L2/L4 use the same scene split, candidate actions, state EV metadata, MLP architecture, optimizer, and training schedule.
+- L2 and L4 both produce 512-dimensional frozen ResNet-18 features and therefore feed predictors with the same state-feature dimensionality and MLP parameter count.
 - L2 and L4 are cached once per unique current state.
 - L4 uses no candidate image and no future measurement; it is built only from the currently selected exposure set.
-- The first three channels of the L4 map are exactly the L2 fused output, making L4 an explicit information superset rather than a different reconstruction target.
+- The first three channels of the L4 map are exactly the L2 fused output; the remaining channels explicitly encode compressed `S`, `W`, under-exposure coverage, and over-exposure coverage.
 - SICE ordinal exposure ranks are not physical EV values; do not use this experiment to claim continuous physical-action zero-shot generalization.
