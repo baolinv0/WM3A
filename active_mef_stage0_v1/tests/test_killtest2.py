@@ -32,9 +32,12 @@ def test_state_map_is_l2_superset():
     backend = LinearRadianceFusion()
     fused, state = backend.fuse_with_state(exposures, [-1.0, 0.0])
     state_map = state_to_map(fused, state)
-    assert state_map.shape == (16, 16, 6)
+    assert state_map.shape == (16, 16, 9)
     np.testing.assert_allclose(state_map[..., :3], fused, atol=0, rtol=0)
     assert np.isfinite(state_map).all()
+    # L4 must carry explicit S/W accumulation information, not only Y_t.
+    assert np.any(state_map[..., 3:6] > 0)
+    assert np.any(state_map[..., 6:7] > 0)
 
 
 def test_decision_regret_known_case():
@@ -58,11 +61,11 @@ def test_resnet_encoder_shapes_without_pretrained_weights():
     if os.environ.get("RUN_KT2_RESNET_TEST") != "1":
         pytest.skip("set RUN_KT2_RESNET_TEST=1 for slower ResNet encoder smoke test")
     rgb = [np.zeros((32, 32, 3), np.float32), np.ones((32, 32, 3), np.float32)]
-    state = [np.zeros((32, 32, 6), np.float32), np.ones((32, 32, 6), np.float32)]
+    state = [np.zeros((32, 32, 9), np.float32), np.ones((32, 32, 9), np.float32)]
     enc3 = FrozenResNet18Encoder(3, device="cpu", weights="none", image_size=64)
-    enc6 = FrozenResNet18Encoder(6, device="cpu", weights="none", image_size=64)
+    enc9 = FrozenResNet18Encoder(9, device="cpu", weights="none", image_size=64)
     assert enc3.encode(rgb, batch_size=2).shape == (2, 512)
-    assert enc6.encode(state, batch_size=2).shape == (2, 512)
+    assert enc9.encode(state, batch_size=2).shape == (2, 512)
 
 
 def _make_end_to_end_fixture(root: Path, n_scenes: int = 9):
