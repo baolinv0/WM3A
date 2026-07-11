@@ -19,6 +19,10 @@ jobs:
     defaults:
       run:
         working-directory: active_mef_stage0_v1
+    env:
+      RUN_KT2_RESNET_TEST: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
