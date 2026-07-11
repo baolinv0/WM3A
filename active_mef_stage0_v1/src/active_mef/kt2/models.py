@@ -72,6 +72,8 @@ def train_scalar_mlp(
     x_val: np.ndarray,
     y_val: np.ndarray,
     *,
+    meta_val: list[dict] | None = None,
+    selection_metric: str = "decision_regret",
     hidden_dims: tuple[int, ...] = (256, 128),
     dropout: float = 0.1,
     learning_rate: float = 1e-3,
@@ -91,6 +93,12 @@ def train_scalar_mlp(
         raise ValueError("train/val feature dimensions differ")
     if batch_size <= 0 or max_epochs <= 0 or patience <= 0:
         raise ValueError("batch_size, max_epochs, and patience must be positive")
+    selection_metric = str(selection_metric).lower()
+    if selection_metric not in {"decision_regret", "val_loss"}:
+        raise ValueError("selection_metric must be 'decision_regret' or 'val_loss'")
+    if selection_metric == "decision_regret":
+        if meta_val is None or len(meta_val) != len(y_val):
+            raise ValueError("decision_regret checkpoint selection requires meta_val aligned with y_val")
 
     _set_seed(seed)
     selected_device = device if not device.startswith("cuda") or torch.cuda.is_available() else "cpu"
@@ -119,7 +127,9 @@ def train_scalar_mlp(
     y_val_t = torch.from_numpy(y_val_s[:, None]).to(dev)
 
     best_state = copy.deepcopy(model.state_dict())
-    best_val = float("inf")
+    best_selection = float("inf")
+    best_val_loss = float("inf")
+    best_val_regret = float("inf")
     best_epoch = -1
     stale = 0
     history: list[dict] = []
@@ -137,14 +147,47 @@ def train_scalar_mlp(
             loss.backward()
             optimizer.step()
             train_losses.append(float(loss.detach().cpu()))
+
         model.eval()
         with torch.inference_mode():
-            val_loss = float(loss_fn(model(x_val_t), y_val_t).detach().cpu())
+            val_pred_s_t = model(x_val_t).squeeze(1)
+            val_loss = float(loss_fn(val_pred_s_t[:, None], y_val_t).detach().cpu())
+            val_pred_s = val_pred_s_t.detach().cpu().numpy().astype(np.float32)
         if not np.isfinite(val_loss):
             raise FloatingPointError(f"non-finite validation loss at epoch {epoch}")
-        history.append({"epoch": epoch, "train_loss": float(np.mean(train_losses)), "val_loss": val_loss})
-        if val_loss < best_val - 1e-6:
-            best_val = val_loss
+        val_pred = val_pred_s * y_std + y_mean
+
+        val_regret = float("nan")
+        val_spearman = float("nan")
+        val_top1 = float("nan")
+        if meta_val is not None:
+            from .evaluation import evaluate_decisions
+
+            decision_summary, _ = evaluate_decisions(y_val, val_pred, meta_val)
+            val_regret = float(decision_summary.mean_regret)
+            val_spearman = float(decision_summary.mean_spearman)
+            val_top1 = float(decision_summary.top1_accuracy)
+
+        selection_value = val_regret if selection_metric == "decision_regret" else val_loss
+        if not np.isfinite(selection_value):
+            raise FloatingPointError(
+                f"non-finite checkpoint selection value at epoch {epoch}: {selection_metric}={selection_value}"
+            )
+        history.append({
+            "epoch": epoch,
+            "train_loss": float(np.mean(train_losses)),
+            "val_loss": val_loss,
+            "val_regret": val_regret,
+            "val_spearman": val_spearman,
+            "val_top1": val_top1,
+            "selection_metric": selection_metric,
+            "selection_value": selection_value,
+        })
+
+        if selection_value < best_selection - 1e-8:
+            best_selection = selection_value
+            best_val_loss = val_loss
+            best_val_regret = val_regret
             best_epoch = epoch
             best_state = copy.deepcopy(model.state_dict())
             stale = 0
@@ -152,6 +195,7 @@ def train_scalar_mlp(
             stale += 1
             if stale >= patience:
                 break
+
     model.load_state_dict(best_state)
     model.eval()
     return {
@@ -161,7 +205,10 @@ def train_scalar_mlp(
         "y_std": y_std,
         "history": history,
         "best_epoch": best_epoch,
-        "best_val_loss": best_val,
+        "best_selection_value": best_selection,
+        "selection_metric": selection_metric,
+        "best_val_loss": best_val_loss,
+        "best_val_regret": best_val_regret,
         "device": str(dev),
         "hidden_dims": tuple(hidden_dims),
         "dropout": float(dropout),
@@ -205,6 +252,9 @@ def save_bundle(path: str | Path, bundle: dict, level: str) -> None:
         "y_std": float(bundle["y_std"]),
         "level": level,
         "best_epoch": int(bundle["best_epoch"]),
+        "selection_metric": bundle["selection_metric"],
+        "best_selection_value": float(bundle["best_selection_value"]),
         "best_val_loss": float(bundle["best_val_loss"]),
+        "best_val_regret": float(bundle["best_val_regret"]),
     }
     torch.save(payload, out)
