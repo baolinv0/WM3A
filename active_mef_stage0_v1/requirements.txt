@@ -1,0 +1,7 @@
+numpy>=1.24
+pandas>=2.0
+PyYAML>=6.0
+imageio>=2.31
+opencv-python-headless>=4.8
+scikit-image>=0.22
+tqdm>=4.66

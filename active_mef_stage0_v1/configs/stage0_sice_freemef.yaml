@@ -1,0 +1,42 @@
+seed: 42
+
+dataset:
+  train_manifest: data/manifests/sice_train.jsonl
+  test_manifest: data/manifests/sice_test.jsonl
+  limit_train: null
+  limit_test: null
+  fixed_search_scenes: 100
+
+simulator:
+  enabled: false
+
+fusion:
+  type: freemef
+  params:
+    repo_path: /absolute/path/to/FreeMEF
+    checkpoint: /absolute/path/to/FreeMEF/weights/FreeMEF.pth
+    config: /absolute/path/to/FreeMEF/options/FreeMEF.yml
+    device: cuda
+    checkpoint_key: params
+    input_color: bgr
+    base_ev: 0.0
+    pad_factor: 8
+
+heuristic:
+  gamma: 2.2
+  reliable_low: 0.04
+  reliable_high: 0.96
+  redundancy_penalty: 0.05
+
+experiment:
+  # For SICE/Kalantari without exposure metadata, manifest builder assigns
+  # ordinal EV ranks. Prefer sidecar exposure metadata when available.
+  candidate_evs: [-2, -1, 0, 1, 2]
+  base_ev: 0
+  budgets: [1, 2, 3, 4, 5]
+  metric: psnr
+  random_repeats: 5
+  enumerate_value_tensor: true
+  value_tensor_max_subset_size: 2
+  bootstrap_repeats: 1000
+  fixed_sets: {}

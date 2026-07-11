@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+.download_venv/
+.pytest_cache/
+SICE*/
+*.pth
+*.pt
+*.ckpt
+results/*/kt2_features*.npz
+outputs/

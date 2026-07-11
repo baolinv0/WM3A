@@ -1,0 +1,50 @@
+name: KT2 Pipeline Tests
+
+on:
+  push:
+    branches:
+      - active-mef-stage0-v1
+    paths:
+      - 'active_mef_stage0_v1/**'
+      - '.github/workflows/kt2-tests.yml'
+  pull_request:
+    paths:
+      - 'active_mef_stage0_v1/**'
+      - '.github/workflows/kt2-tests.yml'
+
+jobs:
+  kt2-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: active_mef_stage0_v1
+    env:
+      RUN_KT2_RESNET_TEST: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            active_mef_stage0_v1/pyproject.toml
+            active_mef_stage0_v1/requirements.txt
+            active_mef_stage0_v1/requirements-kt2.txt
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[kt2]'
+          pip install pytest
+
+      - name: Compile
+        run: python -m compileall -q src scripts tests
+
+      - name: Run Stage-0 and KT2 tests
+        run: pytest -q tests/test_smoke.py tests/test_killtest2.py tests/test_killtest2_rollout_types.py tests/test_freemef_adapter.py tests/test_kt2_provenance.py

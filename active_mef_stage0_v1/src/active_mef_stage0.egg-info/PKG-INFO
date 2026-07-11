@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: active-mef-stage0
+Version: 0.1.0
+Summary: Stage-0 feasibility code for adaptive multi-exposure acquisition
+Requires-Python: >=3.10
+Requires-Dist: numpy>=1.24
+Requires-Dist: pandas>=2.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: imageio>=2.31
+Requires-Dist: opencv-python-headless>=4.8
+Requires-Dist: scikit-image>=0.22
+Requires-Dist: tqdm>=4.66

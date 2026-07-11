@@ -1,0 +1,9 @@
+method,quality_cost_auc,min_budget,max_budget
+oracle_greedy,77.35257097133615,1,3
+oracle_sequence,77.35257097133615,1,3
+best_fixed,77.15669978646233,1,3
+random_r1,73.49579117863262,1,3
+random,72.30165603242031,1,3
+random_r2,71.74762064841008,1,3
+random_r0,71.66155627021823,1,3
+strong_heuristic,68.06143707063434,1,3

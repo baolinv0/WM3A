@@ -1,0 +1,37 @@
+seed: 42
+device: cuda
+
+levels: [L0, L1, L2, L4]
+
+data:
+  # All four files must come from the same clean common-action-pool run.
+  tensor: results/kill_test_sice/oracle_value_tensor.jsonl
+  feature_cache: results/kill_test_sice/kt2_features_resnet18.npz
+  manifest: data/manifests/sice_test.jsonl
+  stage0_config: configs/stage0_sice_mertens.yaml
+
+split:
+  # Fast Kill Test split on the 210 Part2 scenes: approximately 140 / 35 / 35.
+  # A later paper run may use Part1 train/val and keep all Part2 scenes held out.
+  train_frac: 0.6666666667
+  val_frac: 0.1666666667
+
+training:
+  hidden_dims: [256, 128]
+  dropout: 0.1
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 512
+  max_epochs: 120
+  patience: 15
+  selection_metric: decision_regret
+
+evaluation:
+  bootstrap_repeats: 5000
+
+rollout:
+  budgets: [2, 3, 4]
+  base_ev: 0.0
+  per_scene_results: results/kill_test_sice/per_scene.csv
+  baseline_method: best_fixed
+  oracle_method: oracle_greedy

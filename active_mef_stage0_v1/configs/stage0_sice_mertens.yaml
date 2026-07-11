@@ -1,0 +1,48 @@
+seed: 42
+
+dataset:
+  # Part1 is used only to select the strongest non-adaptive fixed bracket.
+  # Part2 remains the held-out Stage-0 evaluation set.
+  train_manifest: data/manifests/sice_train.jsonl
+  test_manifest:  data/manifests/sice_test.jsonl
+  limit_train: null
+  limit_test: null
+  fixed_search_scenes: null
+  # images already resized to 512px offline — no runtime resize needed
+
+simulator:
+  enabled: false
+
+fusion:
+  type: linear_radiance
+  params:
+    gamma: 2.2
+    mu: 5000.0
+    sigma: 0.2
+
+heuristic:
+  gamma: 2.2
+  reliable_low: 0.04
+  reliable_high: 0.96
+  redundancy_penalty: 0.05
+
+experiment:
+  # Scheme 1: every SICE scene is strictly filtered to this common action pool.
+  # Native ±4 frames from 9-frame scenes are intentionally excluded.
+  candidate_evs: [-3, -2, -1, 0, 1, 2, 3]
+  base_ev: 0.0
+  budgets: [1, 2, 3, 4]
+  metric: psnr
+
+  # Real camera-style standard brackets. They are reported as standard_fixed.
+  # Every fixed policy includes the mandatory base exposure 0 EV.
+  # A separate best_fixed baseline is searched on Part1 and frozen on Part2.
+  fixed_sets:
+    2: [-1.0, 0.0]
+    3: [-2.0, 0.0, 2.0]
+    4: [-3.0, -1.0, 0.0, 2.0]
+
+  random_repeats: 5
+  enumerate_value_tensor: true
+  value_tensor_max_subset_size: 2
+  bootstrap_repeats: 1000

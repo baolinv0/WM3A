@@ -1,0 +1,193 @@
+scene_id,budget,method,score,selected
+scene_012,1,best_fixed,37.87395663068551,[0.0]
+scene_012,1,strong_heuristic,37.87395663068551,[0.0]
+scene_012,1,oracle_greedy,37.87395663068551,[0.0]
+scene_012,1,oracle_sequence,37.87395663068551,[0.0]
+scene_012,1,random_r0,37.87395663068551,[0.0]
+scene_012,1,random_r1,37.87395663068551,[0.0]
+scene_012,1,random_r2,37.87395663068551,[0.0]
+scene_012,1,random,37.87395663068551,mean_over_repeats
+scene_012,2,best_fixed,39.44526441116474,"[-1.0, 0.0]"
+scene_012,2,strong_heuristic,33.43779065276476,"[0.0, 2.0]"
+scene_012,2,oracle_greedy,39.44526441116474,"[0.0, -1.0]"
+scene_012,2,oracle_sequence,39.44526441116474,"[0.0, -1.0]"
+scene_012,2,random_r0,33.43779065276476,"[0.0, 2.0]"
+scene_012,2,random_r1,37.559536496123414,"[0.0, 1.0]"
+scene_012,2,random_r2,33.43779065276476,"[0.0, 2.0]"
+scene_012,2,random,34.81170593388431,mean_over_repeats
+scene_012,3,best_fixed,39.81035486141943,"[-2.0, -1.0, 0.0]"
+scene_012,3,strong_heuristic,32.95402744042313,"[0.0, 2.0, 3.0]"
+scene_012,3,oracle_greedy,39.81035486141943,"[0.0, -1.0, -2.0]"
+scene_012,3,oracle_sequence,39.81035486141943,"[0.0, -2.0, -1.0]"
+scene_012,3,random_r0,34.74763226655465,"[0.0, 2.0, -2.0]"
+scene_012,3,random_r1,35.07070247415915,"[0.0, 1.0, 3.0]"
+scene_012,3,random_r2,34.94641058800467,"[0.0, 2.0, -1.0]"
+scene_012,3,random,34.921581776239485,mean_over_repeats
+scene_013,1,best_fixed,37.336049111710864,[0.0]
+scene_013,1,strong_heuristic,37.336049111710864,[0.0]
+scene_013,1,oracle_greedy,37.336049111710864,[0.0]
+scene_013,1,oracle_sequence,37.336049111710864,[0.0]
+scene_013,1,random_r0,37.336049111710864,[0.0]
+scene_013,1,random_r1,37.336049111710864,[0.0]
+scene_013,1,random_r2,37.336049111710864,[0.0]
+scene_013,1,random,37.336049111710864,mean_over_repeats
+scene_013,2,best_fixed,38.88453510727287,"[-1.0, 0.0]"
+scene_013,2,strong_heuristic,32.18818539108426,"[0.0, 2.0]"
+scene_013,2,oracle_greedy,38.88453510727287,"[0.0, -1.0]"
+scene_013,2,oracle_sequence,38.88453510727287,"[0.0, -1.0]"
+scene_013,2,random_r0,33.933591045186574,"[0.0, 3.0]"
+scene_013,2,random_r1,32.18818539108426,"[0.0, 2.0]"
+scene_013,2,random_r2,36.313230916677114,"[0.0, -3.0]"
+scene_013,2,random,34.14500245098265,mean_over_repeats
+scene_013,3,best_fixed,39.288186772906265,"[-2.0, -1.0, 0.0]"
+scene_013,3,strong_heuristic,31.66665552438662,"[0.0, 2.0, 3.0]"
+scene_013,3,oracle_greedy,39.288186772906265,"[0.0, -1.0, -2.0]"
+scene_013,3,oracle_sequence,39.288186772906265,"[0.0, -2.0, -1.0]"
+scene_013,3,random_r0,34.62320607135531,"[0.0, 3.0, -3.0]"
+scene_013,3,random_r1,33.72055139055029,"[0.0, 2.0, -1.0]"
+scene_013,3,random_r2,33.176953770320175,"[0.0, -3.0, 2.0]"
+scene_013,3,random,33.840237077408595,mean_over_repeats
+scene_014,1,best_fixed,36.74665259886985,[0.0]
+scene_014,1,strong_heuristic,36.74665259886985,[0.0]
+scene_014,1,oracle_greedy,36.74665259886985,[0.0]
+scene_014,1,oracle_sequence,36.74665259886985,[0.0]
+scene_014,1,random_r0,36.74665259886985,[0.0]
+scene_014,1,random_r1,36.74665259886985,[0.0]
+scene_014,1,random_r2,36.74665259886985,[0.0]
+scene_014,1,random,36.74665259886985,mean_over_repeats
+scene_014,2,best_fixed,38.491412621214,"[-1.0, 0.0]"
+scene_014,2,strong_heuristic,31.21490012268215,"[0.0, 2.0]"
+scene_014,2,oracle_greedy,38.491412621214,"[0.0, -1.0]"
+scene_014,2,oracle_sequence,38.491412621214,"[0.0, -1.0]"
+scene_014,2,random_r0,35.994604903980886,"[0.0, -3.0]"
+scene_014,2,random_r1,37.47655677136194,"[0.0, -2.0]"
+scene_014,2,random_r2,33.055783935761895,"[0.0, 3.0]"
+scene_014,2,random,35.50898187036824,mean_over_repeats
+scene_014,3,best_fixed,38.95276710272562,"[-2.0, -1.0, 0.0]"
+scene_014,3,strong_heuristic,30.691246253736097,"[0.0, 2.0, 3.0]"
+scene_014,3,oracle_greedy,38.95276710272562,"[0.0, -1.0, -2.0]"
+scene_014,3,oracle_sequence,38.95276710272562,"[0.0, -2.0, -1.0]"
+scene_014,3,random_r0,37.04155218106807,"[0.0, -3.0, -2.0]"
+scene_014,3,random_r1,34.064653348659505,"[0.0, -2.0, 3.0]"
+scene_014,3,random_r2,33.804269863208965,"[0.0, 3.0, -3.0]"
+scene_014,3,random,34.970158464312185,mean_over_repeats
+scene_015,1,best_fixed,38.506872470043646,[0.0]
+scene_015,1,strong_heuristic,38.506872470043646,[0.0]
+scene_015,1,oracle_greedy,38.506872470043646,[0.0]
+scene_015,1,oracle_sequence,38.506872470043646,[0.0]
+scene_015,1,random_r0,38.506872470043646,[0.0]
+scene_015,1,random_r1,38.506872470043646,[0.0]
+scene_015,1,random_r2,38.506872470043646,[0.0]
+scene_015,1,random,38.506872470043646,mean_over_repeats
+scene_015,2,best_fixed,39.86489956612712,"[-1.0, 0.0]"
+scene_015,2,strong_heuristic,37.38706223852385,"[0.0, 2.0]"
+scene_015,2,oracle_greedy,40.56700107052058,"[0.0, 1.0]"
+scene_015,2,oracle_sequence,40.56700107052058,"[0.0, 1.0]"
+scene_015,2,random_r0,39.138372857300624,"[0.0, 3.0]"
+scene_015,2,random_r1,39.86489956612712,"[0.0, -1.0]"
+scene_015,2,random_r2,36.433195525665674,"[0.0, -3.0]"
+scene_015,2,random,38.478822649697804,mean_over_repeats
+scene_015,3,best_fixed,39.93975633258308,"[-2.0, -1.0, 0.0]"
+scene_015,3,strong_heuristic,37.10853776279029,"[0.0, 2.0, 3.0]"
+scene_015,3,oracle_greedy,41.40106510152246,"[0.0, 1.0, -1.0]"
+scene_015,3,oracle_sequence,41.40106510152246,"[0.0, -1.0, 1.0]"
+scene_015,3,random_r0,39.99253789812387,"[0.0, 3.0, -1.0]"
+scene_015,3,random_r1,38.63669829886424,"[0.0, -1.0, 2.0]"
+scene_015,3,random_r2,37.32574220382994,"[0.0, -3.0, -2.0]"
+scene_015,3,random,38.65165946693935,mean_over_repeats
+scene_016,1,best_fixed,37.872627206359496,[0.0]
+scene_016,1,strong_heuristic,37.872627206359496,[0.0]
+scene_016,1,oracle_greedy,37.872627206359496,[0.0]
+scene_016,1,oracle_sequence,37.872627206359496,[0.0]
+scene_016,1,random_r0,37.872627206359496,[0.0]
+scene_016,1,random_r1,37.872627206359496,[0.0]
+scene_016,1,random_r2,37.872627206359496,[0.0]
+scene_016,1,random,37.872627206359496,mean_over_repeats
+scene_016,2,best_fixed,39.407076774812595,"[-1.0, 0.0]"
+scene_016,2,strong_heuristic,34.72885360160463,"[0.0, 2.0]"
+scene_016,2,oracle_greedy,39.407076774812595,"[0.0, -1.0]"
+scene_016,2,oracle_sequence,39.407076774812595,"[0.0, -1.0]"
+scene_016,2,random_r0,38.60930150515016,"[0.0, 1.0]"
+scene_016,2,random_r1,38.60930150515016,"[0.0, 1.0]"
+scene_016,2,random_r2,36.61277762480547,"[0.0, 3.0]"
+scene_016,2,random,37.943793545035255,mean_over_repeats
+scene_016,3,best_fixed,39.45486683582544,"[-2.0, -1.0, 0.0]"
+scene_016,3,strong_heuristic,34.310441391295356,"[0.0, 2.0, 3.0]"
+scene_016,3,oracle_greedy,39.723294016080494,"[0.0, -1.0, 1.0]"
+scene_016,3,oracle_sequence,39.723294016080494,"[0.0, -1.0, 1.0]"
+scene_016,3,random_r0,39.19333973955953,"[0.0, 1.0, -2.0]"
+scene_016,3,random_r1,39.723294016080494,"[0.0, 1.0, -1.0]"
+scene_016,3,random_r2,36.54618391597146,"[0.0, 3.0, 1.0]"
+scene_016,3,random,38.48760589053716,mean_over_repeats
+scene_017,1,best_fixed,37.39752178187469,[0.0]
+scene_017,1,strong_heuristic,37.39752178187469,[0.0]
+scene_017,1,oracle_greedy,37.39752178187469,[0.0]
+scene_017,1,oracle_sequence,37.39752178187469,[0.0]
+scene_017,1,random_r0,37.39752178187469,[0.0]
+scene_017,1,random_r1,37.39752178187469,[0.0]
+scene_017,1,random_r2,37.39752178187469,[0.0]
+scene_017,1,random,37.39752178187469,mean_over_repeats
+scene_017,2,best_fixed,38.8589843941596,"[-1.0, 0.0]"
+scene_017,2,strong_heuristic,33.06692366485069,"[0.0, 2.0]"
+scene_017,2,oracle_greedy,38.8589843941596,"[0.0, -1.0]"
+scene_017,2,oracle_sequence,38.8589843941596,"[0.0, -1.0]"
+scene_017,2,random_r0,33.06692366485069,"[0.0, 2.0]"
+scene_017,2,random_r1,35.043661938633676,"[0.0, 3.0]"
+scene_017,2,random_r2,35.043661938633676,"[0.0, 3.0]"
+scene_017,2,random,34.38474918070602,mean_over_repeats
+scene_017,3,best_fixed,39.07963189586012,"[-2.0, -1.0, 0.0]"
+scene_017,3,strong_heuristic,32.598089150014566,"[0.0, 2.0, 3.0]"
+scene_017,3,oracle_greedy,39.07963189586012,"[0.0, -1.0, -2.0]"
+scene_017,3,oracle_sequence,39.07963189586012,"[0.0, -2.0, -1.0]"
+scene_017,3,random_r0,33.94876398637325,"[0.0, 2.0, 1.0]"
+scene_017,3,random_r1,35.976258947943585,"[0.0, 3.0, -2.0]"
+scene_017,3,random_r2,36.11744333741303,"[0.0, 3.0, -1.0]"
+scene_017,3,random,35.34748875724329,mean_over_repeats
+scene_018,1,best_fixed,36.611699095331765,[0.0]
+scene_018,1,strong_heuristic,36.611699095331765,[0.0]
+scene_018,1,oracle_greedy,36.611699095331765,[0.0]
+scene_018,1,oracle_sequence,36.611699095331765,[0.0]
+scene_018,1,random_r0,36.611699095331765,[0.0]
+scene_018,1,random_r1,36.611699095331765,[0.0]
+scene_018,1,random_r2,36.611699095331765,[0.0]
+scene_018,1,random,36.611699095331765,mean_over_repeats
+scene_018,2,best_fixed,38.34582047513002,"[-1.0, 0.0]"
+scene_018,2,strong_heuristic,31.808736331673508,"[0.0, 2.0]"
+scene_018,2,oracle_greedy,38.34582047513002,"[0.0, -1.0]"
+scene_018,2,oracle_sequence,38.34582047513002,"[0.0, -1.0]"
+scene_018,2,random_r0,36.147553606866325,"[0.0, 1.0]"
+scene_018,2,random_r1,35.59280490531576,"[0.0, -3.0]"
+scene_018,2,random_r2,33.85217192804331,"[0.0, 3.0]"
+scene_018,2,random,35.1975101467418,mean_over_repeats
+scene_018,3,best_fixed,38.65358773267057,"[-2.0, -1.0, 0.0]"
+scene_018,3,strong_heuristic,31.3221533100115,"[0.0, 2.0, 3.0]"
+scene_018,3,oracle_greedy,38.65358773267057,"[0.0, -1.0, -2.0]"
+scene_018,3,oracle_sequence,38.65358773267057,"[0.0, -2.0, -1.0]"
+scene_018,3,random_r0,33.70662920603036,"[0.0, 1.0, 3.0]"
+scene_018,3,random_r1,37.57197474221857,"[0.0, -3.0, -1.0]"
+scene_018,3,random_r2,34.961697482609786,"[0.0, 3.0, -1.0]"
+scene_018,3,random,35.41343381028624,mean_over_repeats
+scene_019,1,best_fixed,36.2655034822048,[0.0]
+scene_019,1,strong_heuristic,36.2655034822048,[0.0]
+scene_019,1,oracle_greedy,36.2655034822048,[0.0]
+scene_019,1,oracle_sequence,36.2655034822048,[0.0]
+scene_019,1,random_r0,36.2655034822048,[0.0]
+scene_019,1,random_r1,36.2655034822048,[0.0]
+scene_019,1,random_r2,36.2655034822048,[0.0]
+scene_019,1,random,36.2655034822048,mean_over_repeats
+scene_019,2,best_fixed,37.879778357458264,"[-1.0, 0.0]"
+scene_019,2,strong_heuristic,30.852263826206602,"[0.0, 2.0]"
+scene_019,2,oracle_greedy,37.879778357458264,"[0.0, -1.0]"
+scene_019,2,oracle_sequence,37.879778357458264,"[0.0, -1.0]"
+scene_019,2,random_r0,30.852263826206602,"[0.0, 2.0]"
+scene_019,2,random_r1,37.879778357458264,"[0.0, -1.0]"
+scene_019,2,random_r2,37.879778357458264,"[0.0, -1.0]"
+scene_019,2,random,35.53727351370771,mean_over_repeats
+scene_019,3,best_fixed,38.3616192576475,"[-2.0, -1.0, 0.0]"
+scene_019,3,strong_heuristic,30.35152826163024,"[0.0, 2.0, 3.0]"
+scene_019,3,oracle_greedy,38.3616192576475,"[0.0, -1.0, -2.0]"
+scene_019,3,oracle_sequence,38.3616192576475,"[0.0, -2.0, -1.0]"
+scene_019,3,random_r0,32.35955247273268,"[0.0, 2.0, -1.0]"
+scene_019,3,random_r1,34.12819340005606,"[0.0, -1.0, 3.0]"
+scene_019,3,random_r2,37.215565076502315,"[0.0, -1.0, -3.0]"
+scene_019,3,random,34.56777031643035,mean_over_repeats

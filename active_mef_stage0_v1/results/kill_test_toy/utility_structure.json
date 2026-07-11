@@ -1,0 +1,61 @@
+{
+  "summary": {
+    "num_scenes": 8,
+    "mean_positive_gain_rate": 0.5173611111111112,
+    "mean_best_action_change_rate": 0.19642857142857145,
+    "mean_unique_best_actions_per_scene": 2.0,
+    "diminishing_return_violation_ratio": 0.7416666666666667,
+    "mean_violation_magnitude": 0.8194146434668121,
+    "num_diminishing_return_comparisons": 240
+  },
+  "state_action_diversity": [
+    {
+      "scene_id": "scene_012",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.1428571428571429
+    },
+    {
+      "scene_id": "scene_013",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.1428571428571429
+    },
+    {
+      "scene_id": "scene_014",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.1428571428571429
+    },
+    {
+      "scene_id": "scene_015",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.4285714285714286
+    },
+    {
+      "scene_id": "scene_016",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.2857142857142857
+    },
+    {
+      "scene_id": "scene_017",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.1428571428571429
+    },
+    {
+      "scene_id": "scene_018",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.1428571428571429
+    },
+    {
+      "scene_id": "scene_019",
+      "num_states": 7,
+      "unique_best_actions": 2,
+      "best_action_change_rate": 0.1428571428571429
+    }
+  ]
+}
