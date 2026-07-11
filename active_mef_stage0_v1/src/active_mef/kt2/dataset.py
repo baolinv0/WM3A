@@ -191,6 +191,8 @@ class ValueTensorDataset:
         tensor_path: str | Path,
         cache_path: str | Path,
         split_path: str | Path | None = None,
+        manifest_path: str | Path | None = None,
+        stage0_config_path: str | Path | None = None,
         train_frac: float = 2.0 / 3.0,
         val_frac: float = 1.0 / 6.0,
         seed: int = 42,
@@ -198,12 +200,28 @@ class ValueTensorDataset:
         tensor_path = Path(tensor_path)
         rows = load_tensor_rows(tensor_path)
         cache = FeatureCache.load(cache_path)
+
         actual_tensor_sha = sha256_file(tensor_path)
         if cache.tensor_sha256 != actual_tensor_sha:
             raise ValueError(
                 "feature cache was built from a different oracle tensor: "
                 f"cache={cache.tensor_sha256}, current={actual_tensor_sha}. Rebuild the cache."
             )
+        if manifest_path is not None:
+            actual_manifest_sha = sha256_file(manifest_path)
+            if cache.manifest_sha256 != actual_manifest_sha:
+                raise ValueError(
+                    "feature cache was built from a different manifest: "
+                    f"cache={cache.manifest_sha256}, current={actual_manifest_sha}. Rebuild the cache."
+                )
+        if stage0_config_path is not None:
+            actual_config_sha = sha256_file(stage0_config_path)
+            if cache.stage0_config_sha256 != actual_config_sha:
+                raise ValueError(
+                    "feature cache was built from a different Stage-0 config: "
+                    f"cache={cache.stage0_config_sha256}, current={actual_config_sha}. Rebuild the cache."
+                )
+
         scenes = {str(row["scene_id"]) for row in rows}
         if split_path is not None and Path(split_path).exists():
             split = load_scene_split(split_path)
