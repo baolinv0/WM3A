@@ -35,11 +35,12 @@ experiment:
   metric: psnr
 
   # Real camera-style standard brackets. They are reported as standard_fixed.
+  # Every fixed policy includes the mandatory base exposure 0 EV.
   # A separate best_fixed baseline is searched on Part1 and frozen on Part2.
   fixed_sets:
     2: [-1.0, 0.0]
     3: [-2.0, 0.0, 2.0]
-    4: [-3.0, -1.0, 1.0, 3.0]
+    4: [-3.0, -1.0, 0.0, 2.0]
 
   random_repeats: 5
   enumerate_value_tensor: true
