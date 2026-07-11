@@ -47,4 +47,4 @@ jobs:
         run: python -m compileall -q src scripts tests
 
       - name: Run Stage-0 and KT2 tests
-        run: pytest -q tests/test_smoke.py tests/test_killtest2.py tests/test_killtest2_rollout_types.py tests/test_freemef_adapter.py
+        run: pytest -q tests/test_smoke.py tests/test_killtest2.py tests/test_killtest2_rollout_types.py tests/test_freemef_adapter.py tests/test_kt2_provenance.py
