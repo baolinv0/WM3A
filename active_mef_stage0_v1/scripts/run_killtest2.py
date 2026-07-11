@@ -40,10 +40,13 @@ def main() -> None:
         json.dump(cfg, handle, indent=2)
 
     split_path = out / "scene_split.json"
+    data_cfg = cfg["data"]
     dataset = ValueTensorDataset.create(
-        tensor_path=cfg["data"]["tensor"],
-        cache_path=cfg["data"]["feature_cache"],
+        tensor_path=data_cfg["tensor"],
+        cache_path=data_cfg["feature_cache"],
         split_path=split_path,
+        manifest_path=data_cfg.get("manifest"),
+        stage0_config_path=data_cfg.get("stage0_config"),
         train_frac=float(cfg["split"].get("train_frac", 2.0 / 3.0)),
         val_frac=float(cfg["split"].get("val_frac", 1.0 / 6.0)),
         seed=int(cfg.get("seed", 42)),
