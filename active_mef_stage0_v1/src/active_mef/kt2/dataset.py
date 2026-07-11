@@ -73,10 +73,9 @@ def make_scene_split(
     rng = random.Random(seed)
     rng.shuffle(scenes)
     n = len(scenes)
-    n_train = max(1, int(round(n * train_frac)))
-    n_val = max(1, int(round(n * val_frac)))
-    if n_train + n_val >= n:
-        n_val = max(1, n - n_train - 1)
+    # Reserve at least one scene for both validation and test before rounding.
+    n_train = min(max(1, int(round(n * train_frac))), n - 2)
+    n_val = min(max(1, int(round(n * val_frac))), n - n_train - 1)
     split: dict[str, Split] = {}
     for idx, scene in enumerate(scenes):
         if idx < n_train:
