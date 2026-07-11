@@ -19,6 +19,8 @@ fusion:
     device: cuda
     checkpoint_key: params
     input_color: bgr
+    base_ev: 0.0
+    pad_factor: 8
 
 heuristic:
   gamma: 2.2
