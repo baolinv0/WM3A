@@ -1,12 +1,15 @@
 """Kill Test 2 representation features and encoders.
 
+L0: EV-set metadata + candidate action only.
 L1: global exposure statistics, intentionally no spatial layout.
-L2: frozen feature of the current fused output Y_t.
-L4: frozen feature of a strict superset of Y_t with explicit LinearRadiance
-    accumulation state: [Y_t, compressed S, W, under, over].
+L2: frozen RGB feature of the current fused output Y_t, followed by a zero
+    auxiliary block.
+L4: the same frozen RGB feature, followed by fixed spatial statistics of the
+    LinearRadiance accumulation state (S, W, under, over).
 
-The production path uses ImageNet-pretrained ResNet-18 for L2/L4. A deterministic
-``grid_stats`` path is provided only for CPU smoke tests and fast pipeline checks.
+The dual-path design avoids feeding non-RGB state maps through frozen ImageNet
+BatchNorm statistics. L2 and L4 have exactly the same feature dimensionality and
+therefore use exactly the same scalar predictor capacity.
 """
 from __future__ import annotations
 
@@ -22,6 +25,8 @@ GRID_ROWS = 4
 GRID_COLS = 4
 ACT_DIM = 3
 STATE_META_DIM = 2 * MAX_CONTEXT + 1
+STATE_AUX_CHANNELS = 6  # compressed S RGB, W, under, over
+STATE_AUX_GRID_DIM = GRID_ROWS * GRID_COLS * 2 * STATE_AUX_CHANNELS
 
 
 def _safe_scale(max_abs_ev: float) -> float:
@@ -34,11 +39,11 @@ def encode_action(action_ev: float, current_evs: Sequence[float], max_abs_ev: fl
         raise ValueError("current_evs must be non-empty")
     scale = _safe_scale(max_abs_ev)
     cur = [float(x) for x in current_evs]
-    a = float(action_ev)
+    action = float(action_ev)
     return np.asarray([
-        a / scale,
-        (a - min(cur)) / (2.0 * scale),
-        (a - max(cur)) / (2.0 * scale),
+        action / scale,
+        (action - min(cur)) / (2.0 * scale),
+        (action - max(cur)) / (2.0 * scale),
     ], dtype=np.float32)
 
 
@@ -47,11 +52,7 @@ def encode_state_evs(
     max_abs_ev: float,
     max_context: int = MAX_CONTEXT,
 ) -> np.ndarray:
-    """Encode acquisition-set metadata identically for L1/L2/L4.
-
-    Layout: sorted normalized EV values, validity mask, normalized frame count.
-    Padding values are masked, so EV=0 is not ambiguous with padding.
-    """
+    """Encode acquisition-set metadata identically for L0/L1/L2/L4."""
     cur = sorted(float(x) for x in current_evs)
     if len(cur) > max_context:
         raise ValueError(f"context size {len(cur)} exceeds max_context={max_context}")
@@ -71,11 +72,7 @@ def l1_global_statistics(
     hist_bins: int = HIST_BINS,
     max_context: int = MAX_CONTEXT,
 ) -> np.ndarray:
-    """Strong global-statistics baseline.
-
-    Per selected frame (EV-sorted): luminance histogram, shadow ratio, saturation
-    ratio, mean, and standard deviation. No spatial coordinates are retained.
-    """
+    """Global-statistics baseline without spatial coordinates."""
     cur = sorted(float(x) for x in current_evs)
     if len(cur) > max_context:
         raise ValueError(f"context size {len(cur)} exceeds max_context={max_context}")
@@ -101,71 +98,95 @@ def l1_global_statistics(
 def _grid_stats(img: np.ndarray, rows: int = GRID_ROWS, cols: int = GRID_COLS) -> np.ndarray:
     if img.ndim != 3:
         raise ValueError(f"expected HWC array, got shape={img.shape}")
-    h, w, c = img.shape
+    h, w, channels = img.shape
     parts: list[np.ndarray] = []
-    for r in range(rows):
-        r0, r1 = r * h // rows, (r + 1) * h // rows
+    for row in range(rows):
+        r0, r1 = row * h // rows, (row + 1) * h // rows
         for col in range(cols):
             c0, c1 = col * w // cols, (col + 1) * w // cols
-            patch = img[r0:r1, c0:c1].reshape(-1, c)
+            patch = img[r0:r1, c0:c1].reshape(-1, channels)
             parts.extend([patch.mean(axis=0), patch.std(axis=0)])
     return np.concatenate(parts).astype(np.float32)
 
 
-def state_to_map(fused: np.ndarray, state: dict[str, np.ndarray]) -> np.ndarray:
-    """Build the L4 nine-channel map [Y_t RGB, S RGB, W, under, over].
-
-    The first three channels are exactly the fused output used by L2. The next
-    three are a fixed log-compression of the weighted radiance accumulator S;
-    W is normalized by the maximum context size. Therefore L4 contains the
-    current output plus explicit backend-native accumulation information, while
-    still using no candidate/future frame.
-    """
-    fused = np.clip(np.asarray(fused, dtype=np.float32), 0.0, 1.0)
-    s = np.asarray(state["S"], dtype=np.float32)
-    w = np.asarray(state["W"], dtype=np.float32)
+def state_aux_map(state: dict[str, np.ndarray]) -> np.ndarray:
+    """Return six current-state channels [compressed S RGB, W, under, over]."""
+    radiance_sum = np.asarray(state["S"], dtype=np.float32)
+    weights = np.asarray(state["W"], dtype=np.float32)
     under = np.asarray(state["cov_under"], dtype=np.float32)
     over = np.asarray(state["cov_over"], dtype=np.float32)
-    if w.ndim == 2:
-        w = w[..., None]
+    if weights.ndim == 2:
+        weights = weights[..., None]
     if under.ndim == 2:
         under = under[..., None]
     if over.ndim == 2:
         over = over[..., None]
-    if s.ndim != 3 or s.shape[2] != 3:
-        raise ValueError(f"state S must be HWC RGB, got {s.shape}")
-    if fused.shape[:2] != s.shape[:2] or fused.shape[:2] != w.shape[:2] or fused.shape[:2] != under.shape[:2] or fused.shape[:2] != over.shape[:2]:
-        raise ValueError("fused/state maps must share spatial shape")
+    if radiance_sum.ndim != 3 or radiance_sum.shape[2] != 3:
+        raise ValueError(f"state S must be HWC RGB, got {radiance_sum.shape}")
+    spatial = radiance_sum.shape[:2]
+    if any(arr.shape[:2] != spatial for arr in (weights, under, over)):
+        raise ValueError("state maps must share spatial shape")
 
-    # LinearRadiance's S is a weighted radiance sum. A fixed monotonic log
-    # compression preserves absolute scene/state differences better than per-state
-    # max normalization. 64 is above the expected SICE range for up to 4 frames
-    # and EV ranks in [-3,3]; clipping only protects pathological inputs.
-    s_comp = np.log1p(np.maximum(s, 0.0)) / np.log1p(64.0)
-    s_comp = np.clip(s_comp, 0.0, 1.0)
-    confidence = np.clip(np.maximum(w, 0.0) / float(MAX_CONTEXT), 0.0, 1.0)
-    return np.concatenate([
-        fused,
-        s_comp,
-        confidence,
+    # Fixed monotonic compression; no per-state normalization that could erase
+    # absolute state differences.
+    s_comp = np.log1p(np.maximum(radiance_sum, 0.0)) / np.log1p(64.0)
+    confidence = np.maximum(weights, 0.0) / float(MAX_CONTEXT)
+    aux = np.concatenate([
+        np.clip(s_comp, 0.0, 1.0),
+        np.clip(confidence, 0.0, 1.0),
         np.clip(under, 0.0, 1.0),
         np.clip(over, 0.0, 1.0),
     ], axis=2).astype(np.float32)
+    if aux.shape[2] != STATE_AUX_CHANNELS:
+        raise RuntimeError(f"unexpected auxiliary channel count: {aux.shape}")
+    return aux
+
+
+def state_to_map(fused: np.ndarray, state: dict[str, np.ndarray]) -> np.ndarray:
+    """Nine-channel visualization/debug map [Y_t RGB, state auxiliary maps]."""
+    fused = np.clip(np.asarray(fused, dtype=np.float32), 0.0, 1.0)
+    aux = state_aux_map(state)
+    if fused.shape[:2] != aux.shape[:2]:
+        raise ValueError("fused output and state maps must share spatial shape")
+    return np.concatenate([fused, aux], axis=2).astype(np.float32)
+
+
+def state_aux_grid_feature(state: dict[str, np.ndarray]) -> np.ndarray:
+    feature = _grid_stats(state_aux_map(state))
+    if feature.size != STATE_AUX_GRID_DIM:
+        raise RuntimeError(f"unexpected state auxiliary feature dimension: {feature.size}")
+    return feature
+
+
+def make_l2_dual_feature(rgb_feature: np.ndarray) -> np.ndarray:
+    rgb_feature = np.asarray(rgb_feature, dtype=np.float32).reshape(-1)
+    return np.concatenate([rgb_feature, np.zeros(STATE_AUX_GRID_DIM, dtype=np.float32)])
+
+
+def make_l4_dual_feature(rgb_feature: np.ndarray, aux_feature: np.ndarray) -> np.ndarray:
+    rgb_feature = np.asarray(rgb_feature, dtype=np.float32).reshape(-1)
+    aux_feature = np.asarray(aux_feature, dtype=np.float32).reshape(-1)
+    if aux_feature.size != STATE_AUX_GRID_DIM:
+        raise ValueError(f"expected aux feature dim {STATE_AUX_GRID_DIM}, got {aux_feature.size}")
+    return np.concatenate([rgb_feature, aux_feature]).astype(np.float32)
 
 
 def l2_grid_feature(fused: np.ndarray) -> np.ndarray:
-    return _grid_stats(np.asarray(fused, dtype=np.float32))
+    return make_l2_dual_feature(_grid_stats(np.asarray(fused, dtype=np.float32)))
 
 
 def l4_grid_feature(fused: np.ndarray, state: dict[str, np.ndarray]) -> np.ndarray:
-    return _grid_stats(state_to_map(fused, state))
+    return make_l4_dual_feature(
+        _grid_stats(np.asarray(fused, dtype=np.float32)),
+        state_aux_grid_feature(state),
+    )
 
 
 @dataclass
 class FrozenResNet18Encoder:
-    """Frozen ResNet-18 global feature encoder with configurable input channels."""
+    """Frozen ImageNet ResNet-18 RGB global feature encoder."""
 
-    in_channels: int
+    in_channels: int = 3
     device: str = "cuda"
     weights: str = "imagenet1k_v1"
     weights_path: str | None = None
@@ -176,6 +197,11 @@ class FrozenResNet18Encoder:
         import torch.nn as nn
         from torchvision.models import ResNet18_Weights, resnet18
 
+        if self.in_channels != 3:
+            raise ValueError(
+                "Kill Test 2 production encoder is RGB-only. "
+                "State maps use a separate fixed-statistics path."
+            )
         self.torch = torch
         chosen_device = self.device
         if chosen_device.startswith("cuda") and not torch.cuda.is_available():
@@ -189,7 +215,7 @@ class FrozenResNet18Encoder:
                 raw = raw["state_dict"]
             if not isinstance(raw, dict):
                 raise ValueError("weights_path must contain a state_dict-like mapping")
-            state_dict = {str(k).removeprefix("module."): v for k, v in raw.items()}
+            state_dict = {str(key).removeprefix("module."): value for key, value in raw.items()}
             model.load_state_dict(state_dict, strict=True)
         elif self.weights.lower() in {"imagenet1k_v1", "default"}:
             try:
@@ -204,23 +230,6 @@ class FrozenResNet18Encoder:
         else:
             raise ValueError(f"unsupported weights mode: {self.weights}")
 
-        if self.in_channels != 3:
-            old = model.conv1
-            new = nn.Conv2d(
-                self.in_channels,
-                old.out_channels,
-                kernel_size=old.kernel_size,
-                stride=old.stride,
-                padding=old.padding,
-                bias=False,
-            )
-            with torch.no_grad():
-                new.weight[:, :3].copy_(old.weight)
-                extra = old.weight.mean(dim=1, keepdim=True)
-                for channel in range(3, self.in_channels):
-                    new.weight[:, channel : channel + 1].copy_(extra)
-            model.conv1 = new
-
         model.fc = nn.Identity()
         model.eval().to(self._device)
         for parameter in model.parameters():
@@ -231,13 +240,11 @@ class FrozenResNet18Encoder:
     def output_dim(self) -> int:
         return 512
 
-    def _normalize(self, x):
+    def _normalize(self, tensor):
         torch = self.torch
-        means = [0.485, 0.456, 0.406] + [0.5] * max(0, self.in_channels - 3)
-        stds = [0.229, 0.224, 0.225] + [0.25] * max(0, self.in_channels - 3)
-        mean = torch.tensor(means, dtype=x.dtype, device=x.device).view(1, -1, 1, 1)
-        std = torch.tensor(stds, dtype=x.dtype, device=x.device).view(1, -1, 1, 1)
-        return (x - mean) / std
+        mean = torch.tensor([0.485, 0.456, 0.406], dtype=tensor.dtype, device=tensor.device).view(1, 3, 1, 1)
+        std = torch.tensor([0.229, 0.224, 0.225], dtype=tensor.dtype, device=tensor.device).view(1, 3, 1, 1)
+        return (tensor - mean) / std
 
     def encode(self, images: Sequence[np.ndarray], batch_size: int = 32) -> np.ndarray:
         torch = self.torch
@@ -248,13 +255,21 @@ class FrozenResNet18Encoder:
         outputs: list[np.ndarray] = []
         for start in range(0, len(images), batch_size):
             chunk = images[start : start + batch_size]
-            arr = np.stack([np.asarray(img, dtype=np.float32).transpose(2, 0, 1) for img in chunk])
-            if arr.shape[1] != self.in_channels:
-                raise ValueError(f"expected {self.in_channels} channels, got {arr.shape[1]}")
-            x = torch.from_numpy(arr).to(self._device)
-            x = F.interpolate(x, size=(self.image_size, self.image_size), mode="bilinear", align_corners=False)
-            x = self._normalize(x)
+            array = np.stack([
+                np.asarray(image, dtype=np.float32).transpose(2, 0, 1)
+                for image in chunk
+            ])
+            if array.shape[1] != 3:
+                raise ValueError(f"expected RGB images, got {array.shape[1]} channels")
+            tensor = torch.from_numpy(array).to(self._device)
+            tensor = F.interpolate(
+                tensor,
+                size=(self.image_size, self.image_size),
+                mode="bilinear",
+                align_corners=False,
+            )
+            tensor = self._normalize(tensor)
             with torch.inference_mode():
-                feat = self.model(x)
-            outputs.append(feat.detach().cpu().numpy().astype(np.float32))
+                feature = self.model(tensor)
+            outputs.append(feature.detach().cpu().numpy().astype(np.float32))
         return np.concatenate(outputs, axis=0)
