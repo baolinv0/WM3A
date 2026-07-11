@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train and evaluate L1/L2/L4 scalar value predictors for Kill Test 2."""
+"""Train and evaluate L0/L1/L2/L4 scalar value predictors for Kill Test 2."""
 from __future__ import annotations
 
 import argparse
@@ -16,11 +16,11 @@ from active_mef.kt2.rollout import headroom_recovery, rollout_policy
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser()
-    p.add_argument("--config", required=True)
-    p.add_argument("--output", required=True)
-    p.add_argument("--with-rollout", action="store_true", help="run closed-loop eta evaluation after offline gate")
-    return p.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--with-rollout", action="store_true", help="run closed-loop eta evaluation after offline gate")
+    return parser.parse_args()
 
 
 def load_config(path: str | Path) -> dict:
@@ -49,22 +49,39 @@ def main() -> None:
         seed=int(cfg.get("seed", 42)),
     )
     print("Scene counts:", dataset.scene_counts())
+    print(
+        "Cache provenance:",
+        json.dumps({
+            "tensor_sha256": dataset.cache.tensor_sha256,
+            "manifest_sha256": dataset.cache.manifest_sha256,
+            "stage0_config_sha256": dataset.cache.stage0_config_sha256,
+            "encoder_signature": dataset.cache.encoder_signature,
+            "git_commit": dataset.cache.git_commit,
+        }, indent=2),
+    )
 
     train_cfg = cfg.get("training", {})
-    levels = [str(x).upper() for x in cfg.get("levels", ["L1", "L2", "L4"])]
+    levels = [str(x).upper() for x in cfg.get("levels", ["L0", "L1", "L2", "L4"])]
+    allowed = {"L0", "L1", "L2", "L4"}
+    unknown = set(levels) - allowed
+    if unknown:
+        raise ValueError(f"unsupported representation levels: {sorted(unknown)}")
+
     summaries: list[dict] = []
     state_frames: dict[str, pd.DataFrame] = {}
     bundles: dict[str, dict] = {}
 
     for level in levels:
         x_train, y_train, _ = dataset.arrays(level, "train")
-        x_val, y_val, _ = dataset.arrays(level, "val")
+        x_val, y_val, meta_val = dataset.arrays(level, "val")
         x_test, y_test, meta_test = dataset.arrays(level, "test")
         bundle = train_scalar_mlp(
             x_train,
             y_train,
             x_val,
             y_val,
+            meta_val=meta_val,
+            selection_metric=str(train_cfg.get("selection_metric", "decision_regret")),
             hidden_dims=tuple(int(x) for x in train_cfg.get("hidden_dims", [256, 128])),
             dropout=float(train_cfg.get("dropout", 0.1)),
             learning_rate=float(train_cfg.get("learning_rate", 1e-3)),
@@ -83,17 +100,21 @@ def main() -> None:
             "level": level,
             **summary.as_dict(),
             "best_epoch": bundle["best_epoch"],
+            "selection_metric": bundle["selection_metric"],
+            "best_selection_value": bundle["best_selection_value"],
             "best_val_loss": bundle["best_val_loss"],
+            "best_val_regret": bundle["best_val_regret"],
+            "input_dim": int(x_train.shape[1]),
         }
         summaries.append(row)
 
         level_dir = out / level
         level_dir.mkdir(parents=True, exist_ok=True)
         pd.DataFrame({
-            "scene_id": [m["scene_id"] for m in meta_test],
-            "state_key": [m["state_key"] for m in meta_test],
-            "current": [json.dumps(m["current"]) for m in meta_test],
-            "action": [m["action"] for m in meta_test],
+            "scene_id": [meta["scene_id"] for meta in meta_test],
+            "state_key": [meta["state_key"] for meta in meta_test],
+            "current": [json.dumps(meta["current"]) for meta in meta_test],
+            "action": [meta["action"] for meta in meta_test],
             "true_gain": y_test,
             "pred_gain": y_pred,
         }).to_csv(level_dir / "predictions.csv", index=False)
@@ -107,23 +128,20 @@ def main() -> None:
     summary_df = pd.DataFrame(summaries)
     summary_df.to_csv(out / "summary.csv", index=False)
 
-    comparisons = []
-    if "L2" in state_frames and "L4" in state_frames:
-        comp = scene_bootstrap_regret_difference(
-            reference=state_frames["L2"],
-            challenger=state_frames["L4"],
-            n_boot=int(cfg.get("evaluation", {}).get("bootstrap_repeats", 5000)),
-            seed=int(cfg.get("seed", 42)),
-        )
-        comparisons.append({"reference": "L2", "challenger": "L4", **comp})
-    if "L1" in state_frames and "L4" in state_frames:
-        comp = scene_bootstrap_regret_difference(
-            reference=state_frames["L1"],
-            challenger=state_frames["L4"],
-            n_boot=int(cfg.get("evaluation", {}).get("bootstrap_repeats", 5000)),
-            seed=int(cfg.get("seed", 42)),
-        )
-        comparisons.append({"reference": "L1", "challenger": "L4", **comp})
+    comparisons: list[dict] = []
+    bootstrap_repeats = int(cfg.get("evaluation", {}).get("bootstrap_repeats", 5000))
+    seed = int(cfg.get("seed", 42))
+    if "L4" in state_frames:
+        for reference in ("L2", "L1", "L0"):
+            if reference not in state_frames:
+                continue
+            comparison = scene_bootstrap_regret_difference(
+                reference=state_frames[reference],
+                challenger=state_frames["L4"],
+                n_boot=bootstrap_repeats,
+                seed=seed,
+            )
+            comparisons.append({"reference": reference, "challenger": "L4", **comparison})
     with (out / "representation_comparison.json").open("w", encoding="utf-8") as handle:
         json.dump(comparisons, handle, indent=2)
 
@@ -136,7 +154,7 @@ def main() -> None:
             frame = rollout_policy(
                 dataset,
                 level,
-                predict_fn=lambda x, b=bundle: predict(b, x),
+                predict_fn=lambda x, model_bundle=bundle: predict(model_bundle, x),
                 budgets=budgets,
                 base_ev=float(rollout_cfg.get("base_ev", 0.0)),
             )
