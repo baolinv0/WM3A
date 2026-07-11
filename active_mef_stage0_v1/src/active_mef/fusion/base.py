@@ -7,6 +7,10 @@ import numpy as np
 
 
 class FusionBackend(ABC):
+    # Set to True for recurrent backends whose output depends on acquisition
+    # order rather than only on the selected exposure set.
+    order_sensitive: bool = False
+
     @abstractmethod
     def fuse(self, exposures: dict[float, np.ndarray], selected_evs: list[float]) -> np.ndarray:
         raise NotImplementedError
