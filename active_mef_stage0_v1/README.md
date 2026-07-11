@@ -1,173 +1,171 @@
 # Active MEF Stage-0 v1
 
-First-pass code for the experiment chain:
+This repository implements the minimum evidence chain for adaptive multi-exposure acquisition:
 
-`Exposure Pool -> Oracle Value Tensor -> Oracle vs Strong Heuristic -> Greedy vs Sequence -> Gate A`
+```text
+Common Exposure Pool
+→ Oracle Value Tensor
+→ Oracle vs Strong Non-adaptive Baselines
+→ Greedy vs Global Search
+→ L0/L1/L2/L4 Value Predictability
+→ Optional Closed-loop Rollout
+```
 
-The code is intentionally **not** a full method implementation. It answers whether the research problem has enough headroom before training a value predictor, spatial complementarity field, RL policy, or world model.
+It is not yet the full paper method. RL, world models, dense spatial ECF prediction, and FreeMEF-conditioned training remain deferred until the cheap gates pass.
 
-## 1. Why the dataset layer is manifest-first
+## 1. Dataset interface
 
-The two closest prior-work families use different data regimes:
+All datasets are converted to JSONL manifests.
 
-- **AdaptiveAE-style dynamic HDR**: HDR video ground truth is used to synthesize candidate LDR measurements with exposure-dependent blur/noise. For Stage 0, use Real-HDRV and DeepHDRVideo HDR-GT frames as primary/cross-dataset sources after reorganizing the HDR GT into per-sequence folders.
-- **FreeMEF-style flexible fusion**: SICE and Kalantari-style folders provide precomputed exposure stacks and GT images. These are useful for static sanity checks and direct compatibility with an external FreeMEF checkpoint.
-
-Instead of hard-coding one dataset layout, every dataset is converted to JSONL.
-
-### Precomputed pool record
+### Precomputed exposure stack
 
 ```json
 {"scene_id":"s1","kind":"precomputed","gt":"/abs/gt.png","exposures":[{"ev":-2,"path":"/abs/a.png"},{"ev":0,"path":"/abs/b.png"},{"ev":2,"path":"/abs/c.png"}]}
 ```
 
-### HDR pair record
+### HDR pair for simulated acquisition
 
 ```json
 {"scene_id":"v1_001","kind":"hdr_pair","hdr":"/abs/0001.exr","hdr_next":"/abs/0002.exr","frame_dt":0.0333}
 ```
 
-The second format lazily synthesizes a candidate EV pool.
+For precomputed data, `candidate_evs` is now enforced strictly. Every scene must contain every configured action, and exposures outside that common pool are removed. This prevents mixed 7-frame/9-frame SICE scenes from using different action spaces.
 
-## 2. Recommended experimental dataset matrix
+## 2. Recommended data roles
 
-| Role | Dataset family | Purpose |
+| Role | Dataset | Purpose |
 |---|---|---|
-| Static sanity | SICE 5-frame | verify subset enumeration and FreeMEF integration |
-| Static learned-fusion check | Kalantari-style MEF data | test fusion-backend dependence |
-| Primary Stage 0 | Real-HDRV HDR-GT source | dynamic scene headroom and motion sensitivity |
-| Cross dataset | DeepHDRVideo HDR-GT source | verify that headroom is not dataset-specific |
+| Static feasibility | SICE | Oracle headroom, value structure, cheap KT2 |
+| Learned-fusion check | Kalantari/FreeMEF-compatible data | backend dependence |
+| Dynamic primary study | Real-HDRV HDR-GT | blur/noise/motion-aware acquisition |
+| Dynamic cross-dataset | DeepHDRVideo HDR-GT | generalization |
 
-Important: the lightweight simulator in this repository is **paper-inspired, not a bit-exact AdaptiveAE reproduction**. Its default `linear_tmo` temporal integration is a cheap fallback. For final dynamic-scene paper experiments, precompute RIFE-based intermediate frames/blur pools or plug in a more faithful simulator, then keep the same manifest and Stage-0 evaluation code.
+The included simulator is paper-inspired, not a bit-exact AdaptiveAE reproduction.
 
 ## 3. Installation
 
 ```bash
 cd active_mef_stage0_v1
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
+pip install -e ".[kt2]"
 ```
 
-For the optional FreeMEF backend, separately install the official FreeMEF environment and provide absolute paths in `configs/stage0_sice_freemef.yaml`.
+## 4. Clean SICE Stage-0 run
 
-## 4. Build manifests
-
-### SICE-style sequence pool
-
-```bash
-python scripts/build_manifest.py sequence_pool \
-  --input-root /data/SICE/input_5frame \
-  --gt-root /data/SICE/gt_resize \
-  --gt-in-subdir \
-  --output data/manifests/sice_test.jsonl
-```
-
-### Kalantari-style sequence pool
-
-```bash
-python scripts/build_manifest.py sequence_pool \
-  --input-root /data/Kalantari_MEF/Testing_input \
-  --gt-root /data/Kalantari_MEF/Testing_gt \
-  --output data/manifests/kalantari_test.jsonl
-```
-
-When `exposure.txt`/`exposures.txt` is present, the builder derives relative EVs from it. Otherwise it assigns ordinal EV ranks and records `ev_source=ordinal`; do not overclaim physical continuous-EV generalization on ordinal-only data.
-
-### HDR video GT source
-
-Reorganize linear HDR GT frames as:
+The current SICE protocol uses the common ordinal action pool:
 
 ```text
-/hdr_gt_root/
-  scene_001/000000.exr 000001.exr ...
-  scene_002/000000.exr 000001.exr ...
+[-3, -2, -1, 0, 1, 2, 3]
 ```
 
-Then:
-
-```bash
-python scripts/build_manifest.py hdr_video \
-  --hdr-root /hdr_gt_root \
-  --output data/manifests/real_hdrv_test.jsonl \
-  --frame-dt 0.0333333
-```
-
-Use official train/test splits when available; do not select the best fixed bracket on the test split.
-
-## 5. Smoke test on synthetic toy data
-
-```bash
-python scripts/make_toy_dataset.py --output data/toy --scenes 8
-cp data/toy/toy_hdr.jsonl data/toy/train.jsonl
-cp data/toy/toy_hdr.jsonl data/toy/test.jsonl
-```
-
-Copy `configs/stage0_hdr_video.yaml` and point both manifests to those toy files, then:
+Part1 selects the strongest fixed bracket; Part2 remains the evaluation set.
 
 ```bash
 python scripts/run_stage0.py \
-  --config configs/stage0_toy.yaml \
-  --output outputs/toy_stage0
-```
-
-## 6. Run Stage 0
-
-```bash
-python scripts/run_stage0.py \
-  --config configs/stage0_hdr_video.yaml \
-  --output outputs/real_hdrv_stage0
+  --config configs/stage0_sice_mertens.yaml \
+  --output results/kill_test_sice
 
 python scripts/analyze_stage0.py \
-  --result-dir outputs/real_hdrv_stage0
+  --result-dir results/kill_test_sice
 ```
 
-Outputs:
+Main Stage-0 methods:
 
-- `per_scene.csv`: raw scene-level scores, no summary-only reporting
-- `summary.csv`: method/budget mean and std
-- `oracle_value_tensor.jsonl`: `V*(scene, current_subset, candidate_action)`
-- `greedy_sequence_gap.csv`: horizon diagnosis
-- `oracle_action_distribution.csv`: action diversity
-- `paired_bootstrap.csv`: paired bootstrap deltas and 95% intervals
-- `quality_cost_auc.csv`: integrated quality-cost comparison
-- `utility_structure.json`: state/action diversity and approximate diminishing-return summary
-- `diminishing_returns.csv`: raw nested-subset marginal-gain comparisons
-- `fixed_sets.json`: train-selected fixed brackets
-- `resolved_config.json`, `environment.json`: reproducibility records
+- `standard_fixed`: configured camera-style bracket;
+- `best_fixed`: train-selected non-adaptive bracket, frozen on test;
+- `strong_heuristic`: current-frame coverage heuristic;
+- `random`: repeated random action selection;
+- `oracle_greedy`: exact one-step marginal-gain selection;
+- `oracle_sequence`: exhaustive global subset search for order-independent backends, or permutation search for order-sensitive backends.
 
-## 7. Methods included in Stage 0
+Main outputs:
 
-- **best_fixed**: selected on the train manifest, then frozen for test
-- **random**: mean over repeated draws with identical action pool/budget
-- **strong_heuristic**: current-image exposure-coverage heuristic using action metadata, without peeking at unobserved candidate frames
-- **oracle_greedy**: exact one-step marginal fusion gain
-- **oracle_sequence**: exhaustive best subset for the budget
+```text
+per_scene.csv
+summary.csv
+paired_bootstrap.csv
+oracle_value_tensor.jsonl
+greedy_sequence_gap.csv
+utility_structure.json
+fixed_sets.json
+resolved_config.json
+environment.json
+```
 
-## 8. Decision gates
+Previously committed SICE results were produced before the common-action-pool fix and must be regenerated before being used as final evidence.
 
-### STOP
+## 5. Kill Test 2
 
-Stop if oracle greedy is close to the strong heuristic and best fixed policy across the quality-cost frontier, with no meaningful frame-count/latency advantage.
+See [`KILL_TEST_2.md`](./KILL_TEST_2.md) for the authoritative protocol.
 
-### GO
+Representations:
 
-Proceed to scalar value prediction only if:
+- `L0`: current EV metadata + candidate action only;
+- `L1`: global per-frame exposure statistics;
+- `L2`: frozen RGB feature of the current fused output plus a zero auxiliary block;
+- `L4`: the same RGB feature plus fixed spatial statistics of the accumulation state `(S, W, under, over)`.
 
-1. oracle headroom over the strong heuristic is meaningful;
-2. optimal actions vary by scene/current subset;
-3. greedy-sequence gap is small enough for one-step valuation, or a clear horizon gap justifies re-refinement.
+The decisive gate is:
 
-## 9. Deliberate omissions in v1
+\[
+L4 > L2
+\]
 
-- no RL;
-- no world model;
-- no HDR generation model;
-- no spatial ECF predictor yet;
-- no claim that the lightweight simulator reproduces AdaptiveAE exactly;
-- no claim that ordinal SICE/Kalantari frame ranks are physical EVs.
+on held-out-scene Decision Regret.
 
-The next code milestone is a scalar predictor only after Gate A passes.
+Build the cache:
 
+```bash
+python scripts/build_killtest2_cache.py \
+  --tensor results/kill_test_sice/oracle_value_tensor.jsonl \
+  --manifest data/manifests/sice_test.jsonl \
+  --stage0-config configs/stage0_sice_mertens.yaml \
+  --output results/kill_test_sice/kt2_features_resnet18.npz \
+  --encoder resnet18 \
+  --device cuda
+```
 
+Train and evaluate:
+
+```bash
+python scripts/run_killtest2.py \
+  --config configs/killtest2_sice.yaml \
+  --output outputs/killtest2_sice
+```
+
+Run rollout only after the offline gate is healthy:
+
+```bash
+python scripts/run_killtest2.py \
+  --config configs/killtest2_sice.yaml \
+  --output outputs/killtest2_sice_rollout \
+  --with-rollout
+```
+
+## 6. Reproducibility safeguards
+
+- deterministic scene hashing replaces Python's process-randomized `hash()`;
+- scene-level split only;
+- cache provenance includes tensor, manifest, config, encoder, and commit signatures;
+- training aborts when the cache tensor hash does not match;
+- L2/L4 have identical feature dimensionality and scalar-MLP capacity;
+- validation Decision Regret selects checkpoints;
+- constant-prediction states are not silently removed from Spearman reporting.
+
+## 7. FreeMEF adapter
+
+The external FreeMEF adapter now:
+
+- pads inputs to the official factor-of-eight requirement and unpads outputs;
+- keeps the configured base exposure as the main frame;
+- preserves auxiliary-frame acquisition order;
+- marks itself order-sensitive so exhaustive search uses permutations rather than set combinations.
+
+No FreeMEF source or checkpoint is bundled here.
+
+## 8. Scope of the Greedy result
+
+The current SICE result can support only:
+
+> Greedy is near the globally best static, order-independent exposure subset under the tested backend.
+
+It does not prove that dynamic recurrent acquisition never needs multi-step planning.
