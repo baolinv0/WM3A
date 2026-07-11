@@ -66,26 +66,23 @@ def resolve_fixed_subset(
     budget: int,
     base: float,
 ) -> list[float]:
-    """Resolve a fixed bracket without silently changing the requested budget."""
-    subset = [float(ev) for ev in requested if float(ev) in sample_evs]
-    if base not in subset:
-        subset = [base] + subset
-    # Preserve uniqueness while keeping configured order.
-    deduped: list[float] = []
-    for ev in subset:
-        if ev not in deduped:
-            deduped.append(ev)
-    subset = deduped[:budget]
-    if len(subset) < budget:
-        unused = sorted(
-            [ev for ev in sample_evs if ev not in subset],
-            key=lambda ev: (abs(ev - base), ev),
-        )
-        subset.extend(unused[: budget - len(subset)])
+    """Validate an exact fixed bracket without silently changing it."""
+    subset = [float(ev) for ev in requested]
+    if len(subset) != len(set(subset)):
+        raise ValueError(f"fixed bracket contains duplicate EVs: {subset}")
     if len(subset) != budget:
-        raise RuntimeError(
-            f"could not construct fixed subset of size {budget}; "
-            f"requested={requested}, available={sample_evs}"
+        raise ValueError(
+            f"fixed bracket for budget={budget} must contain exactly {budget} EVs, got {subset}"
+        )
+    if base not in subset:
+        raise ValueError(
+            f"fixed bracket for budget={budget} must include the mandatory base EV {base}: {subset}"
+        )
+    missing = [ev for ev in subset if ev not in sample_evs]
+    if missing:
+        raise ValueError(
+            f"fixed bracket contains EVs absent from the common action pool: {missing}; "
+            f"available={sample_evs}"
         )
     return subset
 
