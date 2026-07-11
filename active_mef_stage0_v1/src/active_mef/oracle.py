@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from itertools import combinations
+from itertools import combinations, permutations
 import numpy as np
 
 from active_mef.data.manifest import ExposurePoolSample
@@ -13,10 +13,15 @@ class SceneEvaluator:
         self.sample = sample
         self.backend = backend
         self.metric = metric_fn(metric)
+        self.order_sensitive = bool(getattr(backend, "order_sensitive", False))
         self._cache: dict[tuple[float, ...], tuple[float, np.ndarray]] = {}
 
+    def _key(self, selected_evs: list[float] | tuple[float, ...]) -> tuple[float, ...]:
+        values = tuple(float(e) for e in selected_evs)
+        return values if self.order_sensitive else tuple(sorted(values))
+
     def evaluate(self, selected_evs: list[float] | tuple[float, ...]) -> float:
-        key = tuple(sorted(float(e) for e in selected_evs))
+        key = self._key(selected_evs)
         if key not in self._cache:
             pred = self.backend.fuse(self.sample.exposures, list(key))
             score = float(self.metric(pred, self.sample.target))
@@ -24,8 +29,9 @@ class SceneEvaluator:
         return self._cache[key][0]
 
     def prediction(self, selected_evs: list[float] | tuple[float, ...]) -> np.ndarray:
-        self.evaluate(selected_evs)
-        return self._cache[tuple(sorted(float(e) for e in selected_evs))][1]
+        key = self._key(selected_evs)
+        self.evaluate(key)
+        return self._cache[key][1]
 
     def marginal_gain(self, current: list[float], action: float) -> float:
         before = self.evaluate(current)
@@ -44,23 +50,22 @@ class SceneEvaluator:
         return selected, self.evaluate(selected)
 
     def oracle_sequence(self, budget: int, base_ev: float) -> tuple[list[float], float]:
-        """Exhaustive optimal subset search for exactly *budget* frames.
+        """Exhaustive optimal subset/sequence search for exactly ``budget`` frames.
 
-        Unlike oracle_greedy (which picks greedily one step at a time),
-        this evaluates every combination of size ``budget`` and returns the
-        globally best one.  The comparison in Kill Test 3 is therefore
-        greedy-path quality vs global-optimum quality at the same budget.
+        For order-independent backends this enumerates combinations. For a
+        recurrent/order-sensitive backend it enumerates acquisition-order
+        permutations after the fixed base exposure.
         """
         if budget <= 1:
             return [float(base_ev)], self.evaluate([base_ev])
         remaining = [e for e in self.sample.evs if e != base_ev]
         k = min(budget - 1, len(remaining))
         if k == 0:
-            # No other EV available; single-frame is the only option.
             return [float(base_ev)], self.evaluate([base_ev])
+        candidates = permutations(remaining, k) if self.order_sensitive else combinations(remaining, k)
         best_set: list[float] = []
         best_score = -float("inf")
-        for combo in combinations(remaining, k):
+        for combo in candidates:
             selected = [float(base_ev)] + [float(e) for e in combo]
             score = self.evaluate(selected)
             if score > best_score:
@@ -72,7 +77,12 @@ class SceneEvaluator:
         others = [e for e in self.sample.evs if e != base_ev]
         max_size = min(max_subset_size, len(self.sample.evs) - 1)
         for extra_size in range(0, max_size + 1):
-            for combo in combinations(others, extra_size):
+            current_iter = (
+                permutations(others, extra_size)
+                if self.order_sensitive
+                else combinations(others, extra_size)
+            )
+            for combo in current_iter:
                 current = [float(base_ev)] + [float(e) for e in combo]
                 current_score = self.evaluate(current)
                 for action in self.sample.evs:
@@ -81,10 +91,11 @@ class SceneEvaluator:
                     next_score = self.evaluate(current + [action])
                     rows.append({
                         "scene_id": self.sample.scene_id,
-                        "current": sorted(current),
+                        "current": list(current) if self.order_sensitive else sorted(current),
                         "action": float(action),
                         "score_before": current_score,
                         "score_after": next_score,
                         "gain": next_score - current_score,
+                        "order_sensitive": self.order_sensitive,
                     })
         return rows
