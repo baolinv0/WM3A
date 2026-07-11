@@ -17,9 +17,14 @@ class DecisionSummary:
     frac_regret_lt_01: float
     frac_regret_lt_025: float
     mean_spearman: float
+    mean_spearman_valid: float
+    spearman_valid_fraction: float
+    constant_prediction_state_rate: float
+    constant_true_state_rate: float
     top1_accuracy: float
     top2_recall: float
     num_states: int
+    num_rankable_states: int
 
     def as_dict(self) -> dict:
         return self.__dict__.copy()
@@ -33,8 +38,10 @@ def evaluate_decisions(
 ) -> tuple[DecisionSummary, pd.DataFrame]:
     """Evaluate candidate ranking per current acquisition state.
 
-    Main metric is Decision Regret:
-      max_a v*(a|C) - v*(argmax_a v_hat(a|C)|C)
+    ``mean_spearman`` is zero-filled over rankable states: a constant predictor
+    on a state with non-constant oracle gains contributes zero rather than being
+    silently dropped. ``mean_spearman_valid`` is also reported for conventional
+    comparison, together with the valid fraction.
     """
     if not (len(y_true) == len(y_pred) == len(meta)):
         raise ValueError("y_true, y_pred, meta lengths differ")
@@ -45,8 +52,8 @@ def evaluate_decisions(
     rows: list[dict] = []
     for state_key, indices in groups.items():
         idx = np.asarray(indices, dtype=int)
-        true = y_true[idx]
-        pred = y_pred[idx]
+        true = np.asarray(y_true[idx], dtype=np.float64)
+        pred = np.asarray(y_pred[idx], dtype=np.float64)
         actions = np.asarray([float(meta[i]["action"]) for i in idx], dtype=np.float32)
         best_true = float(true.max())
         true_best_mask = true >= best_true - tie_eps
@@ -57,10 +64,24 @@ def evaluate_decisions(
         pred_order = np.argsort(-pred)
         top2 = pred_order[: min(2, len(pred_order))]
         top2_hit = bool(np.any(true_best_mask[top2]))
-        if len(true) >= 2 and np.std(true) > 1e-12 and np.std(pred) > 1e-12:
+
+        rankable = bool(len(true) >= 2 and np.std(true) > 1e-12)
+        pred_constant = bool(np.std(pred) <= 1e-12)
+        if rankable and not pred_constant:
             rho = float(spearmanr(true, pred).statistic)
+            if not np.isfinite(rho):
+                rho = 0.0
+            rho_zero_filled = rho
+            spearman_valid = True
+        elif rankable:
+            rho = float("nan")
+            rho_zero_filled = 0.0
+            spearman_valid = False
         else:
             rho = float("nan")
+            rho_zero_filled = float("nan")
+            spearman_valid = False
+
         first = meta[int(idx[0])]
         rows.append({
             "scene_id": str(first["scene_id"]),
@@ -71,7 +92,11 @@ def evaluate_decisions(
             "chosen_true_gain": chosen_true,
             "predicted_action": float(actions[chosen_local]),
             "regret": regret,
+            "rankable": float(rankable),
+            "pred_constant": float(pred_constant),
+            "spearman_valid": float(spearman_valid),
             "spearman": rho,
+            "spearman_zero_filled": rho_zero_filled,
             "top1": float(exact_top1),
             "top2": float(top2_hit),
         })
@@ -79,16 +104,23 @@ def evaluate_decisions(
     frame = pd.DataFrame(rows)
     if frame.empty:
         raise RuntimeError("no decision groups were evaluated")
+    rankable_frame = frame[frame.rankable > 0.5]
+    valid_frame = rankable_frame[rankable_frame.spearman_valid > 0.5]
     summary = DecisionSummary(
         mean_regret=float(frame.regret.mean()),
         median_regret=float(frame.regret.median()),
         p90_regret=float(frame.regret.quantile(0.9)),
         frac_regret_lt_01=float((frame.regret < 0.1).mean()),
         frac_regret_lt_025=float((frame.regret < 0.25).mean()),
-        mean_spearman=float(frame.spearman.dropna().mean()) if frame.spearman.notna().any() else float("nan"),
+        mean_spearman=float(rankable_frame.spearman_zero_filled.mean()) if len(rankable_frame) else float("nan"),
+        mean_spearman_valid=float(valid_frame.spearman.mean()) if len(valid_frame) else float("nan"),
+        spearman_valid_fraction=float(len(valid_frame) / len(rankable_frame)) if len(rankable_frame) else float("nan"),
+        constant_prediction_state_rate=float(rankable_frame.pred_constant.mean()) if len(rankable_frame) else float("nan"),
+        constant_true_state_rate=float(1.0 - len(rankable_frame) / len(frame)),
         top1_accuracy=float(frame.top1.mean()),
         top2_recall=float(frame.top2.mean()),
         num_states=int(len(frame)),
+        num_rankable_states=int(len(rankable_frame)),
     )
     return summary, frame
 
@@ -99,10 +131,7 @@ def scene_bootstrap_regret_difference(
     n_boot: int = 5000,
     seed: int = 42,
 ) -> dict:
-    """Bootstrap scene-level regret improvement: reference - challenger.
-
-    Positive values mean the challenger has lower decision regret.
-    """
+    """Bootstrap scene-level regret improvement: reference - challenger."""
     a = reference.groupby("scene_id", as_index=False).regret.mean().rename(columns={"regret": "ref"})
     b = challenger.groupby("scene_id", as_index=False).regret.mean().rename(columns={"regret": "challenger"})
     merged = a.merge(b, on="scene_id", validate="one_to_one")
