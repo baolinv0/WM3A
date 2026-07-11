@@ -1,14 +1,16 @@
 seed: 42
 device: cuda
 
-levels: [L1, L2, L4]
+levels: [L0, L1, L2, L4]
 
 data:
+  # Must be regenerated after the common-action-pool fix.
   tensor: results/kill_test_sice/oracle_value_tensor.jsonl
   feature_cache: results/kill_test_sice/kt2_features_resnet18.npz
 
 split:
-  # 210 scenes -> approximately 140 / 35 / 35
+  # Fast Kill Test split on the 210 Part2 scenes: approximately 140 / 35 / 35.
+  # A later paper run may use Part1 train/val and keep all Part2 scenes held out.
   train_frac: 0.6666666667
   val_frac: 0.1666666667
 
@@ -20,6 +22,7 @@ training:
   batch_size: 512
   max_epochs: 120
   patience: 15
+  selection_metric: decision_regret
 
 evaluation:
   bootstrap_repeats: 5000
