@@ -1,37 +1,115 @@
-# Kill Test 2 — Value Predictability
+# Kill Test 2 — Candidate Value Predictability
 
-This stage tests one question only:
+This document is the authoritative Kill Test 2 protocol. `Experiment.md` is retained only as a short historical pointer.
 
-> Does the LinearRadiance accumulation-aware state contain candidate-value information beyond the current fused output?
+## 1. Research question
 
-The minimum comparison is:
+The current gate is:
 
-- **L1** — global exposure statistics + EV metadata
-- **L2** — frozen feature of the current fused output `Y_t`
-- **L4** — frozen feature of `[Y_t, compressed S, W, under-exposure map, over-exposure map]`
+> Does an accumulation-aware acquisition state predict candidate exposure value better than the current fused image alone?
 
-All three predictors receive identical state EV metadata and candidate-action features. The default split is scene-level only: approximately **140 / 35 / 35** scenes for the 210-scene SICE experiment.
+The decisive comparison is:
 
-L4 is deliberately a strict information superset of L2: its first three channels are exactly the L2 fused output, followed by explicit LinearRadiance accumulation variables. This experiment does **not** claim to validate the FreeMEF hidden state; that learned-backbone validation is deferred until the cheap structural gate passes.
+\[
+\boxed{L4 > L2}
+\]
 
-## 1. Install
+measured on held-out scenes using **Decision Regret**.
+
+This experiment validates a cheap LinearRadiance accumulation state. It does not yet validate the learned FreeMEF recurrent hidden state.
+
+## 2. Mandatory clean rerun
+
+The original SICE results were generated before `candidate_evs` was strictly enforced. Nine-frame scenes could therefore use ordinal actions `-4` and `+4`, while seven-frame scenes used only `[-3,3]`.
+
+After the fix, every SICE scene exposes exactly:
+
+```text
+[-3, -2, -1, 0, 1, 2, 3]
+```
+
+Consequently, the following files must be regenerated before KT2 training:
+
+```text
+results/kill_test_sice/per_scene.csv
+results/kill_test_sice/summary.csv
+results/kill_test_sice/paired_bootstrap.csv
+results/kill_test_sice/oracle_value_tensor.jsonl
+results/kill_test_sice/utility_structure.json
+results/kill_test_sice/kt2_features_resnet18.npz
+```
+
+The cache builder now rejects a tensor containing states outside the configured action pool.
+
+## 3. Stage-0 baselines
+
+Two fixed baselines are reported separately:
+
+- `standard_fixed`: configured camera-style brackets such as `[-2,0,+2]`;
+- `best_fixed`: the strongest non-adaptive bracket searched on SICE Part1 and frozen on Part2.
+
+Do not call the configured standard bracket `best_fixed`.
+
+Run:
 
 ```bash
-cd active_mef_stage0_v1
+python scripts/run_stage0.py \
+  --config configs/stage0_sice_mertens.yaml \
+  --output results/kill_test_sice
+
+python scripts/analyze_stage0.py \
+  --result-dir results/kill_test_sice
+```
+
+## 4. Representation hierarchy
+
+All predictors receive the same current-EV metadata and candidate-action encoding.
+
+### L0 — action prior only
+
+```text
+current EV set + candidate EV + context size
+```
+
+No image information.
+
+### L1 — global exposure statistics
+
+For each currently acquired frame:
+
+- luminance histogram;
+- shadow and saturation ratios;
+- mean and standard deviation.
+
+No spatial layout.
+
+### L2 — current fused output
+
+```text
+Frozen ResNet-18(Y_t) + zero auxiliary block
+```
+
+### L4 — dual-path accumulation-aware state
+
+```text
+Frozen ResNet-18(Y_t)
++
+fixed 4×4 grid statistics of [compressed S, W, under, over]
+```
+
+L2 and L4 have identical feature dimensionality and identical scalar-MLP capacity. The auxiliary block is zero for L2 and populated for L4. This avoids passing non-RGB state maps through frozen ImageNet BatchNorm statistics.
+
+No candidate image or future measurement is used by any representation.
+
+## 5. Build the feature cache
+
+Install:
+
+```bash
 pip install -e ".[kt2]"
 ```
 
-Equivalent:
-
-```bash
-pip install -r requirements.txt
-pip install -r requirements-kt2.txt
-pip install -e .
-```
-
-## 2. Build the unique-state feature cache
-
-Production run with frozen ImageNet ResNet-18 features:
+Build production features:
 
 ```bash
 python scripts/build_killtest2_cache.py \
@@ -44,25 +122,19 @@ python scripts/build_killtest2_cache.py \
   --batch-size 32
 ```
 
-Despite its historical filename, the current `stage0_sice_mertens.yaml` config uses `fusion.type: linear_radiance`. The Stage-0 config supplied here must define the same backend and parameters that generated the oracle value tensor.
+The cache stores and validates:
 
-For a fast CPU pipeline smoke test only:
+- tensor SHA-256;
+- manifest SHA-256;
+- Stage-0 config SHA-256;
+- encoder signature;
+- git commit when available.
 
-```bash
-python scripts/build_killtest2_cache.py \
-  --tensor results/kill_test_sice/oracle_value_tensor.jsonl \
-  --manifest data/manifests/sice_test.jsonl \
-  --stage0-config configs/stage0_sice_mertens.yaml \
-  --output results/kill_test_sice/kt2_features_grid.npz \
-  --encoder grid_stats \
-  --device cpu
-```
+Training aborts if the tensor hash does not match the cache provenance.
 
-`grid_stats` is not the primary representation comparison; it exists for debugging and fast pipeline verification.
+A CPU-only smoke path is available with `--encoder grid_stats`, but it is not the primary experiment.
 
-## 3. Train the three scalar predictors
-
-`configs/killtest2_sice.yaml` already points to the production ResNet-18 feature cache path. Run:
+## 6. Train the predictors
 
 ```bash
 python scripts/run_killtest2.py \
@@ -70,35 +142,35 @@ python scripts/run_killtest2.py \
   --output outputs/killtest2_sice
 ```
 
-Primary outputs:
+The fast Kill Test uses a strict scene-level split of approximately `140 / 35 / 35` on the 210 Part2 scenes. No state-action row from one scene may cross partitions.
 
-```text
-outputs/killtest2_sice/
-├── scene_split.json
-├── summary.csv
-├── representation_comparison.json
-├── L1/
-│   ├── predictions.csv
-│   ├── per_state_metrics.csv
-│   ├── training_history.csv
-│   └── model.pt
-├── L2/
-└── L4/
-```
+The MLP is trained with SmoothL1 regression, but checkpoint selection and early stopping use **validation Decision Regret**, matching the primary scientific metric.
 
-`summary.csv` reports:
+## 7. Metrics
 
-- mean / median / P90 Decision Regret
-- fraction with regret below 0.1 dB and 0.25 dB
-- mean per-state Spearman rank correlation
-- Top-1 candidate accuracy
-- Top-2 recall
+Primary:
 
-`representation_comparison.json` performs a scene-level bootstrap comparison of **L4 vs L2** and **L4 vs L1**. Positive regret improvement means the challenger has lower regret.
+\[
+R(C_t)=\max_a v^*(C_t,a)-v^*(C_t,\arg\max_a \hat v(C_t,a)).
+\]
 
-## 4. Optional closed-loop rollout and oracle-headroom recovery
+Report:
 
-After the offline ranking/regret experiment is healthy:
+- mean, median, and P90 Decision Regret;
+- fraction with regret below 0.1 dB and 0.25 dB;
+- Top-1 and Top-2 candidate accuracy;
+- zero-filled Spearman over rankable states;
+- valid-only Spearman;
+- Spearman valid fraction;
+- constant-prediction state rate.
+
+A constant predictor on a rankable state contributes zero Spearman instead of being silently dropped.
+
+Representation differences are bootstrapped at the **scene level**, not the state-action-row level.
+
+## 8. Optional closed-loop rollout
+
+Run only after the offline gate is healthy:
 
 ```bash
 python scripts/run_killtest2.py \
@@ -107,48 +179,33 @@ python scripts/run_killtest2.py \
   --with-rollout
 ```
 
-This writes:
-
-```text
-rollout_per_scene.csv
-rollout_headroom_recovery.csv
-```
-
-Global headroom recovery is:
+Headroom recovery is:
 
 \[
-\eta = \frac{Q_{policy}-Q_{fixed}}{Q_{oracle}-Q_{fixed}}.
+\eta=\frac{Q_{policy}-Q_{best\_fixed}}{Q_{oracle}-Q_{best\_fixed}}.
 \]
 
-The rollout uses only states already represented in `oracle_value_tensor.jsonl`. With a maximum budget of 4, the tensor must contain current subsets up to size 3. The current SICE tensor/config should therefore use `value_tensor_max_subset_size: 2`, because `current` always includes the base exposure and two additional exposures gives a context size of three.
+The tensor must contain current states up to three frames for a maximum rollout budget of four. With a fixed base exposure, `value_tensor_max_subset_size: 2` provides those states.
 
-## 5. Kill Test interpretation
+## 9. Interpretation
 
-The current decisive gate is **not** merely `L4 > Histogram`.
+- `L4 ≈ L2`: accumulation state has no demonstrated unique value; stop or reframe.
+- `L4 < L2`: diagnose representation failure before expanding the method.
+- `L4 > L2` but the scene-bootstrap interval overlaps zero: promising but inconclusive.
+- `L4 > L2` with lower regret, stable ranking, and better rollout headroom recovery: proceed to Stage 1.
 
-The core gate is:
+The expected hierarchy is:
 
 \[
-\boxed{L4 > L2}
+L4 > L2 > L1 > L0.
 \]
 
-where the comparison is made on held-out scenes with Decision Regret as the primary metric.
+Only after this gate passes should the project add FreeMEF-state extraction, generic exposure-set encoders, or a dense spatial complementarity field.
 
-Suggested internal interpretation:
+## 10. Scope of Kill Test 3
 
-- `L4 ≈ L2`: the current accumulation-aware state has no demonstrated unique value; stop or reframe.
-- `L4 < L2`: the state representation is actively worse; diagnose before any method expansion.
-- `L4 > L2`, but the scene-bootstrap interval overlaps zero: promising but not decisive.
-- `L4 > L2` with meaningful scene-level regret reduction and stable ranking gain: proceed to Stage 1.
+The SICE Greedy-vs-Sequence result supports only this statement:
 
-Only after this gate passes should the project add heavier experiments such as generic exposure-set encoders, FreeMEF-conditioned label enumeration, or dense spatial complementarity prediction.
+> In the current static, order-independent SICE subset-construction setting, one-step greedy selection is empirically near the globally best subset.
 
-## 6. Leakage and fairness constraints
-
-- Split by `scene_id`, never by individual state-action rows.
-- L1/L2/L4 use the same scene split, candidate actions, state EV metadata, MLP architecture, optimizer, and training schedule.
-- L2 and L4 both produce 512-dimensional frozen ResNet-18 features and therefore feed predictors with the same state-feature dimensionality and MLP parameter count.
-- L2 and L4 are cached once per unique current state.
-- L4 uses no candidate image and no future measurement; it is built only from the currently selected exposure set.
-- The first three channels of the L4 map are exactly the L2 fused output; the remaining channels explicitly encode compressed `S`, `W`, under-exposure coverage, and over-exposure coverage.
-- SICE ordinal exposure ranks are not physical EV values; do not use this experiment to claim continuous physical-action zero-shot generalization.
+It does not prove that a world model is unnecessary for dynamic recurrent acquisition. That question must be revisited on a dynamic capture simulator or real burst data if the project expands in that direction.
