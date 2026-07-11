@@ -4,9 +4,11 @@ device: cuda
 levels: [L0, L1, L2, L4]
 
 data:
-  # Must be regenerated after the common-action-pool fix.
+  # All four files must come from the same clean common-action-pool run.
   tensor: results/kill_test_sice/oracle_value_tensor.jsonl
   feature_cache: results/kill_test_sice/kt2_features_resnet18.npz
+  manifest: data/manifests/sice_test.jsonl
+  stage0_config: configs/stage0_sice_mertens.yaml
 
 split:
   # Fast Kill Test split on the 210 Part2 scenes: approximately 140 / 35 / 35.
