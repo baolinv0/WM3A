@@ -1,0 +1,36 @@
+experiment:
+  name: p2_policy_comparison_7ev
+  seeds: [42, 123, 2026]
+
+data:
+  # These paths intentionally target the clean 7-EV PROBE artifacts.
+  # Update only if the canonical artifact directory differs locally.
+  tensor: results/kill_test_sice_7ev/oracle_value_tensor.jsonl
+  feature_cache: results/kill_test_sice_7ev/kt2_features_resnet18.npz
+  split_file: outputs/probe_7ev/scene_split.json
+  manifest: data/manifests/sice_test.jsonl
+  stage0_config: configs/stage0_sice_mertens.yaml
+  action_pool: [-3, -2, -1, 0, 1, 2, 3]
+
+split:
+  seed: 42
+  train_frac: 0.6666666667
+  val_frac: 0.1666666667
+
+training:
+  hidden_dims: [256, 128]
+  dropout: 0.1
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  states_per_batch: 32
+  max_epochs: 16
+  patience: 8
+  target_temperature: 0.25
+  lambda_regression: 0.1
+
+evaluation:
+  bootstrap_repeats: 5000
+  expected_prior_regret_db: 0.2433
+  prior_regret_tolerance_db: 0.0005
+
+device: cuda
